@@ -42,7 +42,7 @@
       shortLabel: "Grok",
       filenamePrefix: "grok-chat",
       hosts: ["grok.com"],
-      nativeAnchorLabels: ["share", "share chat", "share conversation"],
+      nativeAnchorLabels: ["share", "share chat", "share conversation", "share this chat", "copy link"],
       productWords: ["grok", "xai", "x.ai"],
       transcriptMarkers: ["Grok said", "Grok responded"]
     }

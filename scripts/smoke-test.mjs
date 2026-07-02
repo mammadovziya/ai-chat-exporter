@@ -38,6 +38,7 @@ for (const browserName of ["chrome", "firefox"]) {
   assert(!manifest.background, `${browserName} manifest should not need background permissions`);
   assert(!manifest.permissions?.includes("downloads"), `${browserName} should not request downloads permission`);
   assert(!manifest.permissions?.includes("tabs"), `${browserName} should not request tabs permission`);
+  assert(manifest.permissions?.includes("scripting"), `${browserName} should be able to wake content scripts from the popup`);
   assert(manifest.permissions?.includes("storage"), `${browserName} should store local export preferences`);
   assert(!manifest.host_permissions?.includes("<all_urls>"), `${browserName} should not request all URLs`);
   assert(manifest.host_permissions?.every((item) => /(claude\.ai|chatgpt\.com|chat\.openai\.com|gemini\.google\.com|grok\.com)/.test(item)), `${browserName} host permissions must stay supported-site scoped`);
@@ -155,5 +156,7 @@ assert(/data-provider="gemini"\]\[data-ace-native-launcher="true"\]/.test(source
 assert(/PROVIDER_MESSAGE_SELECTOR_GROUPS/.test(sourceText), "Provider scrapers should prefer precise selector groups");
 assert(/messageSelectableElement/.test(sourceText), "Selection state should attach to visible message anchors");
 assert(/USER_MESSAGE_ANCHOR_SELECTOR/.test(sourceText) && /ASSISTANT_MESSAGE_ANCHOR_SELECTOR/.test(sourceText), "Selection anchors should be role-aware");
+assert(/wakeContentScript/.test(sourceText) && /api\.scripting\.executeScript/.test(sourceText), "Popup should wake the exporter when content scripts are missing");
+assert(/share this chat/.test(sourceText) && /copy link/.test(sourceText), "Grok launcher should recognize current share labels");
 
 console.log("Smoke tests passed");

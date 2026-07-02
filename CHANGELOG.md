@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.12
+
+- Added popup-based content script wake-up for Firefox when supported chat
+  pages do not auto-inject the exporter.
+- Added the scoped `scripting` permission so the popup can recover on the
+  active Claude, ChatGPT, Gemini, or Grok tab without broader site access.
+- Strengthened Grok selectors, launcher labels, and fallback styling for
+  `grok.com`.
+
 ## 1.1.11
 
 - Fixed ChatGPT selection targets attaching to broad conversation wrappers.

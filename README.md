@@ -43,6 +43,8 @@ The extension intentionally keeps permissions narrow:
 
 - `activeTab`: lets the popup talk to the current tab when you click the
   extension.
+- `scripting`: lets the popup wake the local exporter scripts on the active
+  supported chat tab if Firefox or Chrome did not auto-inject them.
 - `storage`: saves local export preferences only, such as your last selected
   format. Conversation content, filenames, and titles are not stored.
 - Claude: `https://claude.ai/*`, `https://*.claude.ai/*`

@@ -38,13 +38,24 @@
       "[class*='response-container' i]"
     ].join(","),
     grok: [
-      "[data-testid*='message' i]",
+      "[data-testid*='user-message' i]",
+      "[data-testid*='assistant-message' i]",
+      "[data-testid*='message-bubble' i]",
+      "[data-testid*='chat-message' i]",
       "[data-testid*='conversation-turn' i]",
       "[data-testid*='response' i]",
+      "[data-testid*='message' i]",
+      "[data-message-author-role]",
+      "[data-author]",
+      "[data-role='user']",
+      "[data-role='assistant']",
+      "[data-role='model']",
       "[class*='message-bubble' i]",
       "[class*='message-content' i]",
       "[class*='response-content' i]",
       "[class*='chat-message' i]",
+      "[class*='prose' i]",
+      "[class*='whitespace-pre-wrap' i]",
       "article"
     ].join(",")
   };
@@ -68,7 +79,31 @@
       PROVIDER_MESSAGE_SELECTORS.gemini
     ],
     grok: [
-      PROVIDER_MESSAGE_SELECTORS.grok
+      [
+        "[data-message-author-role]",
+        "[data-author]",
+        "[data-role='user']",
+        "[data-role='assistant']",
+        "[data-role='model']",
+        "[data-testid*='user-message' i]",
+        "[data-testid*='assistant-message' i]",
+        "[data-testid*='message-bubble' i]",
+        "[data-testid*='chat-message' i]",
+        "[data-testid*='conversation-turn' i]"
+      ].join(","),
+      [
+        "[class*='message-bubble' i]",
+        "[class*='message-content' i]",
+        "[class*='response-content' i]",
+        "[class*='chat-message' i]",
+        "[class*='prose' i]",
+        "[class*='whitespace-pre-wrap' i]"
+      ].join(","),
+      [
+        "[data-testid*='response' i]",
+        "[data-testid*='message' i]",
+        "article"
+      ].join(",")
     ]
   };
 
@@ -114,6 +149,8 @@
     "[class*='response-container' i]",
     "[class*='model-response' i]",
     "[class*='assistant-message' i]",
+    "[aria-label*='Grok response' i]",
+    "[aria-label*='Grok said' i]",
     "[data-testid='assistant-message']",
     "[data-testid*='assistant-message' i]",
     "[data-testid*='bot-message' i]",
@@ -363,7 +400,7 @@
   }
 
   function getConversationRoot() {
-    if (currentProviderId() === "chatgpt") {
+    if (["chatgpt", "grok"].includes(currentProviderId())) {
       return document.querySelector("main") || document.body;
     }
 
@@ -1229,6 +1266,9 @@
     return (
       /New chat|All chats|Projects|Artifacts|Explore|Recent|History/i.test(text) &&
       /You said|Claude responded|ChatGPT said|Gemini said|Grok said|Assistant responded/i.test(text)
+    ) || (
+      text.length > 2000 &&
+      /New chat|History|Settings|Upgrade|Private Chat|Sign in|Log in/i.test(text)
     );
   }
 

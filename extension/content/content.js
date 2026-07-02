@@ -1200,7 +1200,7 @@
   }
 
   function useLabeledProviderLauncher(button) {
-    if (!["chatgpt", "gemini"].includes(providerId())) {
+    if (!["chatgpt", "gemini", "grok"].includes(providerId())) {
       return false;
     }
 

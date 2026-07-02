@@ -13,6 +13,10 @@ The only site access requested by the extension is for supported AI chat pages:
 Claude, ChatGPT, Gemini, and Grok. This lets the export panel inspect the
 currently visible conversation and build files from the selected messages.
 
+The `scripting` permission is used only after you click the extension popup on a
+supported chat tab. It injects this extension's local content scripts and CSS
+into that active tab when the browser did not load them automatically.
+
 PDF export uses your browser print dialog. Choose "Save as PDF" or the
 equivalent option in Chrome or Firefox.
 
