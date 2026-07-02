@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.7
+
+- Anchored selection controls to the visible right edge of each message or user
+  bubble instead of the broader message wrapper.
+- Avoided the export panel only for messages it actually overlaps vertically.
+- Refreshed selection mode as users scroll or Claude loads older messages.
+
 ## 1.1.6
 
 - Added automatic launcher placement retries for late-loading supported chat

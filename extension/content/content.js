@@ -10,6 +10,29 @@
   const VALID_FORMATS = new Set(["markdown", "pdf", "text", "json", "csv", "png"]);
   const VALID_PAPER_SIZES = new Set(["a4", "letter"]);
   const VALID_THEMES = new Set(["light", "dark"]);
+  const MESSAGE_ANCHOR_SELECTOR = [
+    ".font-user-message",
+    ".font-claude-message",
+    ".markdown",
+    ".model-response-text",
+    "[data-testid*='user-message' i]",
+    "[data-testid*='assistant-message' i]",
+    "[data-testid*='user-query' i]",
+    "[data-testid*='model-response' i]",
+    "[data-message-author-role]",
+    "[data-author]",
+    "[data-role]",
+    "[class*='message' i]",
+    "[class*='user-query' i]",
+    "[class*='model-response' i]",
+    "article",
+    "section",
+    "blockquote",
+    "pre",
+    "table",
+    "p",
+    "li"
+  ].join(",");
 
   const state = {
     messages: [],
@@ -37,9 +60,11 @@
   let preferencesLoadPromise;
   let preferencesSaveTimer;
   let routeCheckTimer;
+  let selectionObserver;
   let toastTimer;
   let selectionRail;
   let selectionRailFrame = 0;
+  let selectionRefreshTimer;
   const messageClickHandlers = new WeakMap();
 
   let lastRouteKey = currentRouteKey();
@@ -160,11 +185,16 @@
   }
 
   function cleanupInlineSelectors() {
-    window.removeEventListener("scroll", requestSelectionRailPosition, true);
-    window.removeEventListener("resize", requestSelectionRailPosition);
+    window.removeEventListener("scroll", handleSelectionViewportChange, true);
+    window.removeEventListener("resize", handleSelectionViewportChange);
     if (selectionRailFrame) {
       window.cancelAnimationFrame(selectionRailFrame);
       selectionRailFrame = 0;
+    }
+    window.clearTimeout(selectionRefreshTimer);
+    if (selectionObserver) {
+      selectionObserver.disconnect();
+      selectionObserver = undefined;
     }
     if (selectionRail) {
       selectionRail.remove();
@@ -469,24 +499,64 @@
     return edges.length ? Math.max(...edges) : 0;
   }
 
-  function rightOverlayEdge() {
+  function rectsOverlapVertically(left, right, padding = 8) {
+    return left.bottom >= right.top - padding && left.top <= right.bottom + padding;
+  }
+
+  function rightOverlayEdge(referenceRect) {
     const panelRect = panel && !panel.hidden ? panel.getBoundingClientRect() : undefined;
-    if (panelRect && panelRect.width > 0 && panelRect.height > 0) {
+    if (panelRect && panelRect.width > 0 && panelRect.height > 0 && (!referenceRect || rectsOverlapVertically(referenceRect, panelRect))) {
       return Math.max(12, panelRect.left - 12);
     }
 
     return window.innerWidth - 12;
   }
 
+  function messageAnchorRect(message) {
+    const element = message.element;
+    if (!(element instanceof Element)) {
+      return null;
+    }
+
+    const fallback = element.getBoundingClientRect();
+    const candidates = [element, ...Array.from(element.querySelectorAll(MESSAGE_ANCHOR_SELECTOR))]
+      .filter((candidate) => {
+        if (!(candidate instanceof Element) || candidate.closest("#ace-exporter-panel, .ace-selection-rail, .ace-chat-select-button, .ace-exporter-toast")) {
+          return false;
+        }
+
+        const text = (candidate.innerText || candidate.textContent || "").trim();
+        const rect = candidate.getBoundingClientRect();
+        return text.length >= 2 && rect.width >= 24 && rect.height >= 12 && rect.bottom >= fallback.top && rect.top <= fallback.bottom;
+      })
+      .map((candidate) => ({
+        rect: candidate.getBoundingClientRect(),
+        textLength: (candidate.innerText || candidate.textContent || "").trim().length
+      }))
+      .sort((left, right) => (
+        right.rect.right - left.rect.right ||
+        right.rect.width - left.rect.width ||
+        right.textLength - left.textLength
+      ));
+
+    return candidates[0]?.rect || fallback;
+  }
+
   function selectionButtonLeft(rect) {
     const buttonSize = 24;
-    const sideInset = 8;
+    const sideGap = 6;
+    const sideInset = 4;
     const minLeft = Math.max(12, leftAppChromeEdge() + 8);
-    const maxLeft = Math.max(minLeft, rightOverlayEdge() - buttonSize);
-    const messageRightEdge = rect.right - buttonSize - sideInset;
+    const maxLeft = Math.max(minLeft, rightOverlayEdge(rect) - buttonSize);
+    const outsideRightEdge = rect.right + sideGap;
+    const insideRightEdge = rect.right - buttonSize - sideInset;
     const messageLeftEdge = rect.left + sideInset;
 
-    return clamp(messageRightEdge, Math.max(minLeft, messageLeftEdge), maxLeft);
+    if (outsideRightEdge <= maxLeft) {
+      return clamp(outsideRightEdge, minLeft, maxLeft);
+    }
+
+    return clamp(insideRightEdge, Math.max(minLeft, messageLeftEdge), maxLeft);
   }
 
   function positionSelectionRail() {
@@ -501,7 +571,7 @@
 
     for (const message of state.messages) {
       const button = selectionRail.querySelector(`.ace-chat-select-button[data-message-id="${CSS.escape(message.id)}"]`);
-      const rect = message.element?.getBoundingClientRect();
+      const rect = messageAnchorRect(message);
       const visible = Boolean(button && rect && rect.bottom > topGuard && rect.top < bottomGuard);
 
       if (!button) {
@@ -523,12 +593,50 @@
     }
   }
 
+  function scheduleSelectionRefresh() {
+    if (!state.selectionMode || panel?.hidden) {
+      return;
+    }
+
+    window.clearTimeout(selectionRefreshTimer);
+    selectionRefreshTimer = window.setTimeout(() => {
+      if (!state.selectionMode || panel?.hidden) {
+        return;
+      }
+      refreshMessages({ keepSelection: true });
+    }, 300);
+  }
+
+  function handleSelectionViewportChange() {
+    requestSelectionRailPosition();
+    scheduleSelectionRefresh();
+  }
+
   function requestSelectionRailPosition() {
     if (selectionRailFrame || !selectionRail) {
       return;
     }
 
     selectionRailFrame = window.requestAnimationFrame(positionSelectionRail);
+  }
+
+  function observeSelectionMessages() {
+    const root = document.querySelector("main") || document.body;
+    if (!root) {
+      return;
+    }
+
+    if (selectionObserver) {
+      selectionObserver.disconnect();
+    }
+
+    selectionObserver = new MutationObserver(() => {
+      scheduleSelectionRefresh();
+    });
+    selectionObserver.observe(root, {
+      childList: true,
+      subtree: true
+    });
   }
 
   function renderInlineSelectors() {
@@ -539,8 +647,9 @@
     }
 
     const rail = ensureSelectionRail();
-    window.addEventListener("scroll", requestSelectionRailPosition, true);
-    window.addEventListener("resize", requestSelectionRailPosition);
+    window.addEventListener("scroll", handleSelectionViewportChange, true);
+    window.addEventListener("resize", handleSelectionViewportChange);
+    observeSelectionMessages();
 
     for (const message of state.messages) {
       if (!message.element || !document.documentElement.contains(message.element)) {

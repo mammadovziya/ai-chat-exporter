@@ -125,9 +125,11 @@ assert(/muteExport/.test(sourceText), "Exporter should include muted export aler
 assert(/iconSvg/.test(sourceText), "Exporter UI should use inline icons without remote assets");
 assert(/ace-selection-rail/.test(sourceText), "Message selection boxes should live in a single side rail");
 assert(/selectionButtonLeft/.test(sourceText), "Selection buttons should stay on each message");
-assert(/messageRightEdge/.test(sourceText) && /sideInset/.test(sourceText), "Selection buttons should anchor to the right edge of each message");
-assert(/rightOverlayEdge/.test(sourceText), "Selection buttons should avoid the open panel");
+assert(/messageAnchorRect/.test(sourceText) && /MESSAGE_ANCHOR_SELECTOR/.test(sourceText), "Selection buttons should anchor to visible message content");
+assert(/outsideRightEdge/.test(sourceText) && /insideRightEdge/.test(sourceText), "Selection buttons should prefer the absolute right side of each message");
+assert(/rectsOverlapVertically/.test(sourceText) && /rightOverlayEdge/.test(sourceText), "Selection buttons should avoid only panel-overlapped messages");
 assert(/positionSelectionRail/.test(sourceText), "Selection boxes should stay aligned while scrolling");
+assert(/scheduleSelectionRefresh/.test(sourceText) && /observeSelectionMessages/.test(sourceText), "Selection mode should discover older messages as they load");
 assert(/collectUserBubbleEntries/.test(sourceText), "Scraper should include right-aligned user bubbles");
 assert(/installRouteChangeWatcher/.test(sourceText), "Claude SPA route changes should be watched");
 assert(/pushState/.test(sourceText) && /replaceState/.test(sourceText), "History route changes should reset exporter state");
