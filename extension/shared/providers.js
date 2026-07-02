@@ -28,7 +28,7 @@
       assistantLabel: "Gemini",
       filenamePrefix: "gemini-chat",
       hosts: ["gemini.google.com"],
-      nativeAnchorLabels: ["share", "share and export", "share & export", "export"],
+      nativeAnchorLabels: ["upgrade", "share and export", "share & export", "share"],
       productWords: ["gemini", "google"],
       transcriptMarkers: ["Gemini said", "Gemini responded"]
     },

@@ -780,6 +780,13 @@
     return new RegExp(`\\b(${escaped.join("|")})\\b`, "i");
   }
 
+  function nativeAnchorRank(element) {
+    const label = buttonLabel(element).toLowerCase();
+    const labels = currentProvider().nativeAnchorLabels || ["share"];
+    const index = labels.findIndex((item) => new RegExp(`\\b${item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(label));
+    return index === -1 ? labels.length : index;
+  }
+
   function isInTopAppControls(element) {
     return Boolean(element.closest("header, [role='banner'], [data-testid*='header' i], [class*='header' i], [class*='topbar' i], [class*='toolbar' i], [class*='conversation-header' i]"));
   }
@@ -803,13 +810,10 @@
 
   function findShareButton() {
     const candidates = Array.from(document.querySelectorAll("button, a[role='button'], [role='button']"))
-      .filter(isNativeShareAnchor);
+      .filter(isNativeShareAnchor)
+      .sort((left, right) => nativeAnchorRank(left) - nativeAnchorRank(right));
 
-    return candidates.find((button) => /\bshare\b/i.test(buttonLabel(button)) && isInTopAppControls(button)) ||
-      candidates.find((button) => isInTopAppControls(button)) ||
-      candidates.find((button) => /\bshare\b/i.test(buttonLabel(button))) ||
-      candidates[0] ||
-      null;
+    return candidates.find((button) => isInTopAppControls(button)) || candidates[0] || null;
   }
 
   function replaceTextNodes(root, searchPattern, replacement) {
@@ -847,7 +851,7 @@
 
   function makeNativeLauncher(shareButton) {
     const button = shareButton.cloneNode(true);
-    const shareButtonHadVisibleText = Boolean(buttonLabel(shareButton).replace(button.getAttribute("aria-label") || "", "").replace(button.getAttribute("title") || "", "").trim());
+    const shareButtonHadVisibleText = Boolean((shareButton.textContent || "").replace(/\s+/g, " ").trim());
     button.id = "ace-exporter-launcher";
     button.type = "button";
     button.dataset.aceNativeLauncher = "true";

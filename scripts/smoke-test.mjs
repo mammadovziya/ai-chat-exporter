@@ -103,6 +103,8 @@ assert(/handleKeyboardShortcuts/.test(sourceText), "Selection mode should includ
 assert(/Alt\+A/.test(sourceText) && /Alt\+N/.test(sourceText), "Selection shortcuts should expose all and none actions");
 assert(/findShareButton/.test(sourceText), "Launcher should find native share/export buttons");
 assert(/nativeAnchorLabels/.test(sourceText), "Launcher should use provider-specific native anchor labels");
+assert(/"upgrade", "share and export"/.test(sourceText), "Gemini should prefer the native Upgrade pill");
+assert(/nativeAnchorRank/.test(sourceText), "Launcher should respect provider anchor priority");
 assert(/isNativeShareAnchor/.test(sourceText), "Launcher should use strict native share anchors");
 assert(/aceIconOnlyLauncher/.test(sourceText), "Icon-only native share buttons should get icon-only export buttons");
 assert(!/share\|export\|download\|copy link\|copy chat\|more\|options/.test(sourceText), "Launcher should not anchor to broad more/options controls");

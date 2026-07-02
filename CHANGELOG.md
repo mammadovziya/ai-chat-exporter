@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2
+
+- Anchored Gemini's Export button next to the native Upgrade pill.
+- Preserved text-pill styling when cloning native text buttons.
+- Made provider anchor priority explicit so each app gets the intended native
+  placement.
+
 ## 1.1.1
 
 - Restored strict native placement beside provider share/export controls.
