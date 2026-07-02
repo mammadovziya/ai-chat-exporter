@@ -77,6 +77,9 @@ assert(/font-claude-message/.test(sourceText), "Scraper should include Claude as
 assert(/chatgpt\.com/.test(sourceText) && /gemini\.google\.com/.test(sourceText) && /grok\.com/.test(sourceText), "Extension should support ChatGPT, Gemini, and Grok hosts");
 assert(/ACEProviders/.test(sourceText), "Extension should use provider adapters");
 assert(/model-response/.test(sourceText) && /user-query/.test(sourceText), "Scraper should include Gemini/Grok-style message selectors");
+assert(/PROVIDER_MESSAGE_SELECTORS/.test(sourceText), "Scraper should include provider-specific message fallbacks");
+assert(/conversation-turn/.test(sourceText), "Scraper should include ChatGPT conversation turn selectors");
+assert(/message-content/.test(sourceText) && /response-content/.test(sourceText), "Scraper should include Grok/Gemini message content selectors");
 assert(/You said/.test(sourceText) && /Claude responded/.test(sourceText), "Scraper should include transcript marker fallback");
 assert(/aside/.test(sourceText) && /sidebar/.test(sourceText), "Scraper should remove Claude app sidebar chrome");
 assert(/autoPrint/.test(sourceText), "PDF export should open a self-printing document");
@@ -112,6 +115,7 @@ assert(!/share\|export\|download\|copy link\|copy chat\|more\|options/.test(sour
 assert(/makeNativeLauncher/.test(sourceText), "Launcher should clone native button style");
 assert(/insertAdjacentElement\("afterend", launcher\)/.test(sourceText), "Launcher should sit next to Share");
 assert(/data-ace-native-launcher/.test(sourceText), "Native launcher should avoid floating fallback styles");
+assert(/removeAttribute\("disabled"\)/.test(sourceText) && /button\.disabled\s*=\s*false/.test(sourceText), "Native launcher should not inherit disabled share button state");
 assert(/width:\s*min\(356px/.test(sourceText), "Panel should stay compact while keeping button labels readable");
 assert(/max-height:\s*min\(392px/.test(sourceText), "Panel should use compact height instead of full viewport height");
 assert(/ace-quick-export/.test(sourceText), "Panel should prioritize quick export over large settings");
@@ -131,6 +135,7 @@ assert(/rectsOverlapVertically/.test(sourceText) && /rightOverlayEdge/.test(sour
 assert(/positionSelectionRail/.test(sourceText), "Selection boxes should stay aligned while scrolling");
 assert(/scheduleSelectionRefresh/.test(sourceText) && /observeSelectionMessages/.test(sourceText), "Selection mode should discover older messages as they load");
 assert(/collectUserBubbleEntries/.test(sourceText), "Scraper should include right-aligned user bubbles");
+assert(/isUsableMessage/.test(sourceText), "Scraper should filter provider app shell text from exports");
 assert(/installRouteChangeWatcher/.test(sourceText), "Claude SPA route changes should be watched");
 assert(/pushState/.test(sourceText) && /replaceState/.test(sourceText), "History route changes should reset exporter state");
 assert(/popstate/.test(sourceText) && /hashchange/.test(sourceText), "Browser navigation should reset exporter state");

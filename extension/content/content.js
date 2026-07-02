@@ -1099,10 +1099,15 @@
     button.setAttribute("title", "Export chat");
     button.removeAttribute("aria-expanded");
     button.removeAttribute("aria-controls");
+    button.removeAttribute("aria-disabled");
     button.removeAttribute("data-state");
     button.removeAttribute("data-testid");
+    button.removeAttribute("disabled");
     button.removeAttribute("href");
+    button.removeAttribute("inert");
+    button.disabled = false;
     button.setAttribute("role", "button");
+    button.tabIndex = 0;
 
     if (!replaceTextNodes(button, nativeAnchorPattern(), "Export")) {
       const icon = shareButtonHadVisibleText ? null : nativeIconElement("download");

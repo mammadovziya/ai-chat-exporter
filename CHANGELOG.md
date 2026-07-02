@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.8
+
+- Added provider-specific scrape fallbacks for ChatGPT, Gemini, and Grok.
+- Added support for Gemini custom message elements and ChatGPT conversation
+  turns.
+- Prevented cloned native Export buttons from inheriting disabled Share button
+  state.
+- Filtered app shell/navigation text from provider fallback exports.
+
 ## 1.1.7
 
 - Anchored selection controls to the visible right edge of each message or user

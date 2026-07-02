@@ -14,6 +14,41 @@
     '[data-testid*="response-actions" i]'
   ].join(",");
 
+  const PROVIDER_MESSAGE_SELECTORS = {
+    chatgpt: [
+      "[data-testid^='conversation-turn-']",
+      "[data-testid*='conversation-turn' i]",
+      "[data-message-author-role]",
+      "[data-testid*='chat-message' i]",
+      "[data-testid*='message' i]",
+      "article"
+    ].join(","),
+    gemini: [
+      "user-query",
+      "model-response",
+      "message-content",
+      "response-container",
+      "[data-test-id*='user-query' i]",
+      "[data-testid*='user-query' i]",
+      "[data-test-id*='model-response' i]",
+      "[data-testid*='model-response' i]",
+      "[class*='user-query' i]",
+      "[class*='query-text' i]",
+      "[class*='model-response' i]",
+      "[class*='response-container' i]"
+    ].join(","),
+    grok: [
+      "[data-testid*='message' i]",
+      "[data-testid*='conversation-turn' i]",
+      "[data-testid*='response' i]",
+      "[class*='message-bubble' i]",
+      "[class*='message-content' i]",
+      "[class*='response-content' i]",
+      "[class*='chat-message' i]",
+      "article"
+    ].join(",")
+  };
+
   const ASSISTANT_FEEDBACK_SELECTOR = [
     'button[aria-label*="Give positive feedback" i]',
     'button[aria-label*="positive feedback" i]',
@@ -27,7 +62,10 @@
 
   const USER_CONTENT_SELECTOR = [
     ".font-user-message",
+    "user-query",
+    "user-query .query-text",
     "[class*='font-user-message']",
+    "[class*='query-text' i]",
     "[data-testid='user-message']",
     "[data-testid*='user-message' i]",
     "[data-message-author-role='user']",
@@ -42,8 +80,15 @@
   const ASSISTANT_CONTENT_SELECTOR = [
     ".font-claude-message",
     ".markdown",
+    ".prose",
+    "model-response",
+    "model-response message-content",
+    "response-container",
     ".model-response-text",
     "[class*='font-claude-message']",
+    "[class*='prose' i]",
+    "[class*='response-content' i]",
+    "[class*='response-container' i]",
     "[class*='model-response' i]",
     "[class*='assistant-message' i]",
     "[data-testid='assistant-message']",
@@ -86,6 +131,8 @@
         "[data-testid*='assistant-message' i]",
         "[data-testid*='user-query' i]",
         "[data-testid*='model-response' i]",
+        "[data-testid*='conversation-turn' i]",
+        "[data-testid*='response' i]",
         "[data-test-id*='user-query' i]",
         "[data-test-id*='model-response' i]",
         "[data-message-author-role='user']",
@@ -95,6 +142,11 @@
         "[data-role='user']",
         "[data-role='assistant']",
         "[data-role='model']",
+        "user-query",
+        "model-response",
+        "message-content",
+        "response-container",
+        ".prose",
         ".model-response-text"
       ].join(",")
     },
@@ -105,14 +157,19 @@
         '[data-testid*="chat-turn" i]',
         '[data-testid*="chat-message" i]',
         '[data-testid*="message-row" i]',
+        '[data-testid*="message-bubble" i]',
         '[data-testid*="message" i]',
+        '[data-testid*="response" i]',
         '[data-test-id*="conversation" i]',
         '[data-test-id*="chat" i]',
         '[data-test-id*="message" i]',
         '[data-turn]',
         '[data-message-id]',
         ".conversation-turn",
+        ".chat-message",
+        ".message-bubble",
         ".message-content",
+        ".response-content",
         "article"
       ].join(",")
     }
@@ -295,6 +352,10 @@
     );
   }
 
+  function currentProviderId() {
+    return providers?.current?.()?.id || "";
+  }
+
   function nodeText(element) {
     return utils.normalizeWhitespace(element.innerText || element.textContent || "");
   }
@@ -379,14 +440,18 @@
       element.querySelector("[aria-label*='Gemini' i]")?.getAttribute("aria-label"),
       element.querySelector("[aria-label*='Grok' i]")?.getAttribute("aria-label"),
       element.querySelector("[aria-label*='assistant' i]")?.getAttribute("aria-label"),
-      element.querySelector("[aria-label*='user' i]")?.getAttribute("aria-label")
+      element.querySelector("[aria-label*='user' i]")?.getAttribute("aria-label"),
+      element.querySelector("[data-message-author-role='user']") ? "user" : "",
+      element.querySelector("[data-message-author-role='assistant']") ? "assistant" : "",
+      element.querySelector("user-query") ? "user" : "",
+      element.querySelector("model-response") ? "assistant" : ""
     ].join(" ").toLowerCase();
 
-    if (/\b(user|human)\b/.test(roleAttributes) || /\b(font-user-message|user-message|user-query|you said|human-message)\b/.test(signature)) {
+    if (/\b(user|human)\b/.test(roleAttributes) || /\b(font-user-message|user-message|user-query|query-text|you said|human-message)\b/.test(signature)) {
       return "user";
     }
 
-    if (/\b(assistant|model|bot)\b/.test(roleAttributes) || /\b(font-claude-message|assistant-message|model-response|bot-message|markdown)\b/.test(signature) || providerPattern.test(signature)) {
+    if (/\b(assistant|model|bot)\b/.test(roleAttributes) || /\b(font-claude-message|assistant-message|model-response|response-content|bot-message|markdown|prose)\b/.test(signature) || providerPattern.test(signature)) {
       return "assistant";
     }
 
@@ -784,11 +849,11 @@
   }
 
   function contentRole(element) {
-    if (element.matches(USER_CONTENT_SELECTOR)) {
+    if (element.matches(USER_CONTENT_SELECTOR) || element.closest(USER_CONTENT_SELECTOR)) {
       return "user";
     }
 
-    if (element.matches(ASSISTANT_CONTENT_SELECTOR)) {
+    if (element.matches(ASSISTANT_CONTENT_SELECTOR) || element.closest(ASSISTANT_CONTENT_SELECTOR)) {
       return "assistant";
     }
 
@@ -804,6 +869,25 @@
       role: contentRole(element) || inferRole(element, 0),
       source: "content"
     }));
+  }
+
+  function collectProviderEntries(root) {
+    const selector = PROVIDER_MESSAGE_SELECTORS[currentProviderId()];
+    if (!selector) {
+      return [];
+    }
+
+    const candidates = removeNestedCandidates(Array.from(root.querySelectorAll(selector))
+      .filter((element) => isCandidate(element) && !isDateOnlyText(cleanNodeText(element))));
+
+    return candidates.map((element, index) => {
+      const role = contentRole(element) || inferRole(element, index);
+      return {
+        element: bestContentElement(element, role) || element,
+        role,
+        source: "provider"
+      };
+    });
   }
 
   function hasUserBubbleHint(element) {
@@ -969,7 +1053,7 @@
   }
 
   function collectMessagesByNativeStructure(root) {
-    const entries = mergeEntries(collectContentEntries(root), collectActionGroupEntries(root), collectUserBubbleEntries(root));
+    const entries = mergeEntries(collectContentEntries(root), collectProviderEntries(root), collectActionGroupEntries(root), collectUserBubbleEntries(root));
 
     return entries
       .map((entry, index) => extractMessage(entry.element, index, entry.role))
@@ -1114,6 +1198,30 @@
     );
   }
 
+  function isUsableMessage(message) {
+    const text = utils.normalizeWhitespace(message.text);
+    if (!text || isDateOnlyText(text)) {
+      return false;
+    }
+
+    if (text.length > 5000 && /New chat|Recent|History|Explore|Settings|Upgrade|Sign in|Log in/i.test(text)) {
+      return false;
+    }
+
+    if (/^(new chat|search chats|library|settings|upgrade|sign in|log in|try again|regenerate)$/i.test(text)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function providerFallbackMessages(root) {
+    const entries = collectProviderEntries(root);
+    return entries
+      .map((entry, index) => extractMessage(entry.element, index, entry.role))
+      .filter(isUsableMessage);
+  }
+
   function scrape() {
     const root = getConversationRoot();
     let messages = collectMessagesByNativeStructure(root);
@@ -1122,7 +1230,14 @@
       const candidates = collectCandidates(root);
       messages = candidates
         .map((candidate, index) => extractMessage(candidate, index))
-        .filter((message) => message.text.length > 0);
+        .filter(isUsableMessage);
+    }
+
+    if (!messages.length || looksLikePageShell(messages)) {
+      const providerMessages = providerFallbackMessages(root);
+      if (providerMessages.length > messages.length || looksLikePageShell(messages)) {
+        messages = providerMessages;
+      }
     }
 
     if (!messages.length || looksLikePageShell(messages)) {
@@ -1140,7 +1255,7 @@
     }
 
     return {
-      messages,
+      messages: messages.filter(isUsableMessage),
       title: utils.defaultConversationTitle(),
       url: window.location.href,
       provider: providers?.current?.() || null,
