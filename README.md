@@ -43,6 +43,8 @@ The extension intentionally keeps permissions narrow:
 
 - `activeTab`: lets the popup talk to the current tab when you click the
   extension.
+- `storage`: saves local export preferences only, such as your last selected
+  format. Conversation content, filenames, and titles are not stored.
 - Claude: `https://claude.ai/*`, `https://*.claude.ai/*`
 - ChatGPT: `https://chatgpt.com/*`, `https://*.chatgpt.com/*`,
   `https://chat.openai.com/*`

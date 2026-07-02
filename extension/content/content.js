@@ -5,6 +5,11 @@
   const providers = globalScope.ACEProviders;
   const scraper = globalScope.ACEChatScraper || globalScope.ACEClaudeScraper;
   const exporters = globalScope.ACEExporters;
+  const PREFERENCE_STORAGE_KEY = "ace.exportPreferences.v1";
+  const PERSISTED_OPTION_KEYS = ["format", "muteExport", "pageNumbers", "paperSize", "theme"];
+  const VALID_FORMATS = new Set(["markdown", "pdf", "text", "json", "csv", "png"]);
+  const VALID_PAPER_SIZES = new Set(["a4", "letter"]);
+  const VALID_THEMES = new Set(["light", "dark"]);
 
   const state = {
     messages: [],
@@ -28,6 +33,9 @@
   let panel;
   let launcher;
   let launcherObserver;
+  let launcherPlacementTimer;
+  let preferencesLoadPromise;
+  let preferencesSaveTimer;
   let routeCheckTimer;
   let toastTimer;
   let selectionRail;
@@ -35,6 +43,121 @@
   const messageClickHandlers = new WeakMap();
 
   let lastRouteKey = currentRouteKey();
+
+  function extensionStorageArea() {
+    return globalScope.browser?.storage?.local || globalScope.chrome?.storage?.local || null;
+  }
+
+  function fallbackStoredPreferences() {
+    try {
+      return JSON.parse(globalScope.localStorage?.getItem(PREFERENCE_STORAGE_KEY) || "{}") || {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function writeFallbackPreferences(preferences) {
+    try {
+      globalScope.localStorage?.setItem(PREFERENCE_STORAGE_KEY, JSON.stringify(preferences));
+    } catch (error) {
+      // Preference storage is best-effort and never blocks exporting.
+    }
+  }
+
+  function storageGet(key) {
+    const area = extensionStorageArea();
+    if (!area) {
+      return Promise.resolve({ [key]: fallbackStoredPreferences() });
+    }
+
+    if (globalScope.browser?.storage?.local) {
+      return area.get(key).catch(() => ({ [key]: fallbackStoredPreferences() }));
+    }
+
+    return new Promise((resolve) => {
+      try {
+        area.get(key, (result) => resolve(result || { [key]: fallbackStoredPreferences() }));
+      } catch (error) {
+        resolve({ [key]: fallbackStoredPreferences() });
+      }
+    });
+  }
+
+  function storageSet(value) {
+    const area = extensionStorageArea();
+    const fallbackValue = value[PREFERENCE_STORAGE_KEY] || {};
+
+    if (!area) {
+      writeFallbackPreferences(fallbackValue);
+      return Promise.resolve();
+    }
+
+    if (globalScope.browser?.storage?.local) {
+      return area.set(value).catch(() => {
+        writeFallbackPreferences(fallbackValue);
+      });
+    }
+
+    return new Promise((resolve) => {
+      try {
+        area.set(value, resolve);
+      } catch (error) {
+        writeFallbackPreferences(fallbackValue);
+        resolve();
+      }
+    });
+  }
+
+  function sanitizePreferences(value = {}) {
+    const preferences = {};
+
+    if (VALID_FORMATS.has(value.format)) {
+      preferences.format = value.format;
+    }
+    if (typeof value.muteExport === "boolean") {
+      preferences.muteExport = value.muteExport;
+    }
+    if (typeof value.pageNumbers === "boolean") {
+      preferences.pageNumbers = value.pageNumbers;
+    }
+    if (VALID_PAPER_SIZES.has(value.paperSize)) {
+      preferences.paperSize = value.paperSize;
+    }
+    if (VALID_THEMES.has(value.theme)) {
+      preferences.theme = value.theme;
+    }
+
+    return preferences;
+  }
+
+  function persistedPreferences() {
+    return sanitizePreferences(Object.fromEntries(PERSISTED_OPTION_KEYS.map((key) => [key, state.options[key]])));
+  }
+
+  function loadStoredPreferences() {
+    if (!preferencesLoadPromise) {
+      preferencesLoadPromise = storageGet(PREFERENCE_STORAGE_KEY).then((result) => {
+        Object.assign(state.options, sanitizePreferences(result?.[PREFERENCE_STORAGE_KEY]));
+        if (panel && !panel.hidden) {
+          renderPanel();
+        }
+        return state.options;
+      });
+    }
+
+    return preferencesLoadPromise;
+  }
+
+  function saveStoredPreferences() {
+    return storageSet({ [PREFERENCE_STORAGE_KEY]: persistedPreferences() });
+  }
+
+  function scheduleSavePreferences() {
+    window.clearTimeout(preferencesSaveTimer);
+    preferencesSaveTimer = window.setTimeout(() => {
+      saveStoredPreferences();
+    }, 150);
+  }
 
   function cleanupInlineSelectors() {
     window.removeEventListener("scroll", requestSelectionRailPosition, true);
@@ -116,7 +239,7 @@
     }
 
     applyNativeTheme();
-    window.setTimeout(() => placeLauncher(), 0);
+    scheduleLauncherPlacement(0);
   }
 
   function handleRouteChange() {
@@ -491,6 +614,7 @@
       theme: optionValue("theme") || "light",
       title: optionValue("title") || utils.defaultConversationTitle()
     };
+    scheduleSavePreferences();
   }
 
   function iconSvg(name) {
@@ -695,6 +819,7 @@
 
       if (action === "toggle-mute") {
         state.options.muteExport = !state.options.muteExport;
+        scheduleSavePreferences();
         renderPanel();
         updateInlineSelectionState();
         return;
@@ -753,9 +878,10 @@
     }
   }
 
-  function openPanel() {
+  async function openPanel() {
     ensurePanel();
     applyNativeTheme();
+    await loadStoredPreferences();
     state.selectionMode = true;
     state.options.title = "";
     refreshMessages({ keepSelection: true });
@@ -928,6 +1054,25 @@
     document.documentElement.appendChild(launcher);
   }
 
+  function scheduleLauncherPlacement(delay = 120) {
+    window.clearTimeout(launcherPlacementTimer);
+    launcherPlacementTimer = window.setTimeout(() => {
+      placeLauncher();
+    }, delay);
+  }
+
+  function installLauncherAutoPlacement() {
+    const retryDelays = [0, 250, 750, 1500, 3000, 6000];
+    retryDelays.forEach((delay) => window.setTimeout(() => placeLauncher(), delay));
+    window.addEventListener("pageshow", () => scheduleLauncherPlacement(0));
+    window.addEventListener("focus", () => scheduleLauncherPlacement(0));
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        scheduleLauncherPlacement(0);
+      }
+    });
+  }
+
   function handleKeyboardShortcuts(event) {
     if (!state.selectionMode || panel?.hidden) {
       return;
@@ -966,11 +1111,12 @@
     }
 
     placeLauncher();
+    installLauncherAutoPlacement();
 
     if (!launcherObserver) {
       launcherObserver = new MutationObserver(() => {
         scheduleRouteCheck();
-        placeLauncher();
+        scheduleLauncherPlacement();
       });
       launcherObserver.observe(document.documentElement, {
         childList: true,
@@ -984,8 +1130,9 @@
       return false;
     }
 
-    openPanel();
-    sendResponse({ ok: true, count: state.messages.length });
+    openPanel().then(() => {
+      sendResponse({ ok: true, count: state.messages.length });
+    });
     return true;
   }
 
@@ -997,6 +1144,7 @@
   }
 
   if (isSupportedPage()) {
+    loadStoredPreferences();
     installRouteChangeWatcher();
     ensureLauncher();
     attachRuntimeListener();

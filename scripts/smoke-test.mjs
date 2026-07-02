@@ -38,6 +38,7 @@ for (const browserName of ["chrome", "firefox"]) {
   assert(!manifest.background, `${browserName} manifest should not need background permissions`);
   assert(!manifest.permissions?.includes("downloads"), `${browserName} should not request downloads permission`);
   assert(!manifest.permissions?.includes("tabs"), `${browserName} should not request tabs permission`);
+  assert(manifest.permissions?.includes("storage"), `${browserName} should store local export preferences`);
   assert(!manifest.host_permissions?.includes("<all_urls>"), `${browserName} should not request all URLs`);
   assert(manifest.host_permissions?.every((item) => /(claude\.ai|chatgpt\.com|chat\.openai\.com|gemini\.google\.com|grok\.com)/.test(item)), `${browserName} host permissions must stay supported-site scoped`);
   assert(manifest.icons?.["128"] === "icons/icon128.png", `${browserName} manifest should include production icons`);
@@ -132,5 +133,11 @@ assert(/installRouteChangeWatcher/.test(sourceText), "Claude SPA route changes s
 assert(/pushState/.test(sourceText) && /replaceState/.test(sourceText), "History route changes should reset exporter state");
 assert(/popstate/.test(sourceText) && /hashchange/.test(sourceText), "Browser navigation should reset exporter state");
 assert(/resetConversationState/.test(sourceText), "Switching chats should clear stale selection state");
+assert(/PREFERENCE_STORAGE_KEY/.test(sourceText), "Exporter should persist local settings");
+assert(/PERSISTED_OPTION_KEYS/.test(sourceText), "Exporter should persist only explicit option keys");
+assert(!/PERSISTED_OPTION_KEYS\s*=\s*\[[^\]]*(filename|title)/.test(sourceText), "Exporter must not persist conversation filenames or titles");
+assert(/loadStoredPreferences/.test(sourceText) && /saveStoredPreferences/.test(sourceText), "Exporter should remember the last selected format and settings");
+assert(/installLauncherAutoPlacement/.test(sourceText), "Launcher should auto-place on supported AI chat pages");
+assert(/pageshow/.test(sourceText) && /visibilitychange/.test(sourceText), "Launcher should retry placement as apps load and tabs regain focus");
 
 console.log("Smoke tests passed");

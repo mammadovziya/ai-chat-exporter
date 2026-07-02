@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.6
+
+- Added automatic launcher placement retries for late-loading supported chat
+  headers, including ChatGPT.
+- Remembered local export preferences such as the last selected format, PDF
+  theme, paper size, page-number setting, and mute setting.
+- Kept persisted preferences limited to settings only; filenames, titles, and
+  conversation content are never stored.
+
 ## 1.1.5
 
 - Anchored selection checkboxes to the right edge of each message instead of
