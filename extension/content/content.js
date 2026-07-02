@@ -356,17 +356,14 @@
   }
 
   function selectionButtonLeft(rect) {
-    const buttonSize = 26;
-    const sideGap = 10;
+    const buttonSize = 24;
+    const sideInset = 8;
     const minLeft = Math.max(12, leftAppChromeEdge() + 8);
     const maxLeft = Math.max(minLeft, rightOverlayEdge() - buttonSize);
-    const outsideRight = rect.right + sideGap;
+    const messageRightEdge = rect.right - buttonSize - sideInset;
+    const messageLeftEdge = rect.left + sideInset;
 
-    if (outsideRight <= maxLeft) {
-      return clamp(outsideRight, minLeft, maxLeft);
-    }
-
-    return clamp(rect.right - buttonSize - sideGap, Math.max(minLeft, rect.left + sideGap), maxLeft);
+    return clamp(messageRightEdge, Math.max(minLeft, messageLeftEdge), maxLeft);
   }
 
   function positionSelectionRail() {

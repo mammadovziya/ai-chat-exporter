@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.5
+
+- Anchored selection checkboxes to the right edge of each message instead of
+  placing them outside the message rail.
+- Made the selection control smaller and more checkbox-like.
+
 ## 1.1.4
 
 - Restored readable labels for compact panel actions and selection shortcuts.

@@ -123,8 +123,9 @@ assert(/messageClickHandler/.test(sourceText), "Clicking the message itself shou
 assert(/muteExport/.test(sourceText), "Exporter should include muted export alerts");
 assert(/iconSvg/.test(sourceText), "Exporter UI should use inline icons without remote assets");
 assert(/ace-selection-rail/.test(sourceText), "Message selection boxes should live in a single side rail");
-assert(/selectionButtonLeft/.test(sourceText), "Selection buttons should stay beside each message when the panel is open");
-assert(/rect\.right/.test(sourceText) && /rightOverlayEdge/.test(sourceText), "Selection rail should sit near messages without hiding under the panel");
+assert(/selectionButtonLeft/.test(sourceText), "Selection buttons should stay on each message");
+assert(/messageRightEdge/.test(sourceText) && /sideInset/.test(sourceText), "Selection buttons should anchor to the right edge of each message");
+assert(/rightOverlayEdge/.test(sourceText), "Selection buttons should avoid the open panel");
 assert(/positionSelectionRail/.test(sourceText), "Selection boxes should stay aligned while scrolling");
 assert(/collectUserBubbleEntries/.test(sourceText), "Scraper should include right-aligned user bubbles");
 assert(/installRouteChangeWatcher/.test(sourceText), "Claude SPA route changes should be watched");
