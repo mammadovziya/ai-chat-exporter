@@ -1,0 +1,24 @@
+{
+  "name": "ai-chat-exporter",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A privacy-first browser extension for exporting Claude chats to PDF, Markdown, Text, JSON, CSV, and PNG.",
+  "license": "MIT",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "icons": "node scripts/generate-icons.mjs",
+    "package": "npm run build && node scripts/package.mjs",
+    "release": "npm run check && npm run package",
+    "test": "node scripts/smoke-test.mjs",
+    "check": "npm run build && npm test"
+  },
+  "keywords": [
+    "browser-extension",
+    "claude",
+    "export",
+    "markdown",
+    "pdf",
+    "privacy"
+  ]
+}

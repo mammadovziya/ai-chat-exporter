@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Chat Exporter</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header class="popup-header">
+        <img src="icons/icon48.png" alt="" width="48" height="48">
+        <div>
+          <strong>AI Chat Exporter</strong>
+          <span>Local Claude exports</span>
+        </div>
+      </header>
+      <div class="format-strip" aria-label="Supported formats">
+        <span>PDF</span>
+        <span>MD</span>
+        <span>TXT</span>
+        <span>JSON</span>
+        <span>CSV</span>
+        <span>PNG</span>
+      </div>
+      <button id="open-exporter" type="button">
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+          <path d="M12 3v11M7 10l5 5 5-5M5 21h14"/>
+        </svg>
+        <span>Open exporter</span>
+      </button>
+      <p id="status" role="status">Open a Claude chat to begin.</p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

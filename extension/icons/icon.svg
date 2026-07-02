@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">AI Chat Exporter icon</title>
+  <desc id="desc">A document with chat lines and an export arrow on a dark green background.</desc>
+  <defs>
+    <linearGradient id="bg" x1="20" x2="108" y1="12" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#174239"/>
+      <stop offset="1" stop-color="#0f2d29"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="70" x2="108" y1="72" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e7a16b"/>
+      <stop offset="1" stop-color="#c95f3f"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <path d="M39 22h34l22 22v58a10 10 0 0 1-10 10H39a10 10 0 0 1-10-10V32a10 10 0 0 1 10-10z" fill="#fbfaf6"/>
+  <path d="M72 23v18a6 6 0 0 0 6 6h17" fill="#e6dfd2"/>
+  <path d="M44 55h35M44 69h24M44 83h18" stroke="#2d7468" stroke-width="7" stroke-linecap="round"/>
+  <path d="M77 91h28M95 79l12 12-12 12" fill="none" stroke="url(#arrow)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

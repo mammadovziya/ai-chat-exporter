@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "AI Chat Exporter",
+  "version": "1.0.0",
+  "description": "Export Claude chats to PDF, Markdown, Text, JSON, CSV, and PNG. Local-first and privacy-first.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ai-chat-exporter@example.com",
+      "strict_min_version": "121.0"
+    }
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_popup": "popup.html",
+    "default_title": "AI Chat Exporter"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://claude.ai/*",
+    "https://*.claude.ai/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://claude.ai/*",
+        "https://*.claude.ai/*"
+      ],
+      "js": [
+        "shared/utils.js",
+        "content/scraper.js",
+        "content/exporters.js",
+        "content/content.js"
+      ],
+      "css": [
+        "content/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
