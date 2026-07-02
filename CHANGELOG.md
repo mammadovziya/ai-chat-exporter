@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.4
+
+- Restored readable labels for compact panel actions and selection shortcuts.
+- Added Claude right-aligned user bubble detection so user messages can be
+  selected and exported.
+- Positioned selection controls beside each message while avoiding the open
+  export panel.
+
 ## 1.1.3
 
 - Reworked the export panel into a smaller native-feeling command popover.

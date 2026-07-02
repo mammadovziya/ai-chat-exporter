@@ -60,6 +60,18 @@
 
   const ROLE_CONTENT_SELECTOR = `${USER_CONTENT_SELECTOR},${ASSISTANT_CONTENT_SELECTOR}`;
 
+  const USER_BUBBLE_HINT_SELECTOR = [
+    USER_CONTENT_SELECTOR,
+    "[class*='user-message' i]",
+    "[class*='human-message' i]",
+    "[class*='user-query' i]",
+    "[class*='self-end' i]",
+    "[class*='items-end' i]",
+    "[class*='justify-end' i]",
+    "[class*='ml-auto' i]",
+    "[class*='text-right' i]"
+  ].join(",");
+
   const CANDIDATE_GROUPS = [
     {
       min: 1,
@@ -326,6 +338,11 @@
       }
       return true;
     });
+  }
+
+  function removeAncestorCandidates(nodes) {
+    const set = new Set(nodes);
+    return nodes.filter((node) => !Array.from(set).some((other) => other !== node && node.contains(other)));
   }
 
   function collectCandidates(root) {
@@ -789,6 +806,55 @@
     }));
   }
 
+  function hasUserBubbleHint(element) {
+    const signature = [
+      element.getAttribute("data-testid"),
+      element.getAttribute("data-test-id"),
+      element.getAttribute("data-message-author-role"),
+      element.getAttribute("data-author"),
+      element.getAttribute("data-role"),
+      element.getAttribute("aria-label"),
+      classText(element)
+    ].join(" ").toLowerCase();
+
+    return /\b(font-user-message|user-message|human-message|user-query|self-end|items-end|justify-end|ml-auto|text-right)\b/.test(signature);
+  }
+
+  function isLikelyUserBubble(element, root) {
+    if (!(element instanceof Element) || isInsideChrome(element) || !isVisible(element)) {
+      return false;
+    }
+
+    if (element.closest(ASSISTANT_CONTENT_SELECTOR) || element.matches(ASSISTANT_CONTENT_SELECTOR) || element.querySelector(ACTION_GROUP_SELECTOR)) {
+      return false;
+    }
+
+    const text = cleanNodeText(element);
+    if (text.length < 2 || text.length > 1200 || isDateOnlyText(text)) {
+      return false;
+    }
+
+    const rect = element.getBoundingClientRect();
+    const rootRect = root.getBoundingClientRect();
+    if (rect.width < 24 || rect.height < 18 || rect.width > Math.max(720, rootRect.width * 0.9)) {
+      return false;
+    }
+
+    const rightHalf = rect.left > rootRect.left + (rootRect.width * 0.35);
+    return hasUserBubbleHint(element) || (rightHalf && text.length <= 600 && !element.querySelector("pre, table, ol, ul"));
+  }
+
+  function collectUserBubbleEntries(root) {
+    const candidates = removeAncestorCandidates(Array.from(root.querySelectorAll(USER_BUBBLE_HINT_SELECTOR))
+      .filter((element) => isLikelyUserBubble(element, root)));
+
+    return candidates.map((element) => ({
+      element,
+      role: "user",
+      source: "user-bubble"
+    }));
+  }
+
   function hasAssistantFeedback(group) {
     return Boolean(group.querySelector(ASSISTANT_FEEDBACK_SELECTOR));
   }
@@ -868,10 +934,10 @@
     return a === b || a.includes(b) || b.includes(a);
   }
 
-  function mergeEntries(contentEntries, actionEntries) {
+  function mergeEntries(contentEntries, ...extraEntryGroups) {
     const entries = [...contentEntries];
 
-    for (const actionEntry of actionEntries) {
+    for (const actionEntry of extraEntryGroups.flat()) {
       const duplicate = entries.some((entry) => (
         entry.element === actionEntry.element ||
         entry.element.contains(actionEntry.element) ||
@@ -903,7 +969,7 @@
   }
 
   function collectMessagesByNativeStructure(root) {
-    const entries = mergeEntries(collectContentEntries(root), collectActionGroupEntries(root));
+    const entries = mergeEntries(collectContentEntries(root), collectActionGroupEntries(root), collectUserBubbleEntries(root));
 
     return entries
       .map((entry, index) => extractMessage(entry.element, index, entry.role))

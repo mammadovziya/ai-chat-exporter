@@ -355,28 +355,18 @@
     return window.innerWidth - 12;
   }
 
-  function selectionRailX() {
-    const rects = state.messages
-      .map((message) => message.element?.getBoundingClientRect())
-      .filter((rect) => rect && rect.width > 0 && rect.height > 0);
-
-    if (!rects.length) {
-      return 12;
-    }
-
+  function selectionButtonLeft(rect) {
     const buttonSize = 26;
     const sideGap = 10;
-    const chatLeft = Math.min(...rects.map((rect) => rect.left));
-    const chatRight = Math.max(...rects.map((rect) => rect.right));
     const minLeft = Math.max(12, leftAppChromeEdge() + 8);
     const maxLeft = Math.max(minLeft, rightOverlayEdge() - buttonSize);
-    const outsideChat = chatRight + sideGap;
+    const outsideRight = rect.right + sideGap;
 
-    if (outsideChat <= maxLeft) {
-      return clamp(outsideChat, minLeft, maxLeft);
+    if (outsideRight <= maxLeft) {
+      return clamp(outsideRight, minLeft, maxLeft);
     }
 
-    return clamp(chatRight - buttonSize - sideGap, Math.max(minLeft, chatLeft + sideGap), maxLeft);
+    return clamp(rect.right - buttonSize - sideGap, Math.max(minLeft, rect.left + sideGap), maxLeft);
   }
 
   function positionSelectionRail() {
@@ -386,7 +376,6 @@
       return;
     }
 
-    const left = selectionRailX();
     const topGuard = 62;
     const bottomGuard = Math.max(topGuard + 40, window.innerHeight - 92);
 
@@ -407,6 +396,7 @@
       const visibleTop = Math.max(rect.top, topGuard);
       const visibleBottom = Math.min(rect.bottom, bottomGuard);
       const top = clamp(visibleTop + 6, topGuard, Math.max(topGuard, visibleBottom - 28));
+      const left = selectionButtonLeft(rect);
 
       button.style.left = `${left}px`;
       button.style.top = `${top}px`;
@@ -575,15 +565,15 @@
         </header>
 
         <section class="ace-quick-export">
-          <label>
+          <label class="ace-format-field">
             <span>Format</span>
             <select data-option="format">${formatOptions()}</select>
           </label>
-          <button type="button" class="ace-toggle-button ace-icon-only-button" data-action="toggle-mute" data-active="${state.options.muteExport}" aria-label="Mute export alerts" aria-pressed="${state.options.muteExport}" title="Mute export alerts">
-            ${iconSvg("bellOff")}
+          <button type="button" class="ace-toggle-button ace-labeled-button" data-action="toggle-mute" data-active="${state.options.muteExport}" aria-label="Mute export alerts" aria-pressed="${state.options.muteExport}" title="Mute export alerts">
+            <span class="ace-button-content">${iconSvg("bellOff")}<span>Mute</span></span>
           </button>
-          <button type="button" class="ace-icon-only-button" data-action="settings" aria-label="Settings" aria-expanded="${state.settingsOpen}" title="Settings">
-            ${iconSvg("settings")}
+          <button type="button" class="ace-labeled-button" data-action="settings" aria-label="Settings" aria-expanded="${state.settingsOpen}" title="Settings">
+            <span class="ace-button-content">${iconSvg("settings")}<span>Settings</span></span>
           </button>
           <button type="button" class="ace-primary-button" data-action="export">
             <span class="ace-button-content">${iconSvg("download")}<span>Export</span></span>
@@ -591,7 +581,7 @@
         </section>
 
         <section class="ace-selection-toolbar">
-          <button type="button" class="ace-icon-only-button" data-action="refresh" aria-label="Refresh detected messages" title="Refresh detected messages">${iconSvg("refresh")}</button>
+          <button type="button" data-action="refresh" aria-label="Refresh detected messages" title="Refresh detected messages"><span class="ace-button-content">${iconSvg("refresh")}<span>Refresh</span></span></button>
           <button type="button" data-action="select-all" title="Alt+A"><span class="ace-button-content">${iconSvg("checkAll")}<span>All</span></span></button>
           <button type="button" data-action="select-assistant" title="Alt+C"><span class="ace-button-content">${iconSvg("bot")}<span>${utils.escapeHtml(assistantShortLabel())}</span></span></button>
           <button type="button" data-action="select-user" title="Alt+Y"><span class="ace-button-content">${iconSvg("user")}<span>You</span></span></button>
