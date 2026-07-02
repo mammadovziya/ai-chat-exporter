@@ -152,5 +152,8 @@ assert(/launcherHost/.test(sourceText), "Fallback launcher should attach to the 
 assert(/aceLabeledLauncher/.test(sourceText), "OpenAI and Gemini launchers should keep visible Export labels");
 assert(/data-provider="chatgpt"\]\[data-ace-native-launcher="true"\]/.test(sourceText), "ChatGPT should get native launcher styling");
 assert(/data-provider="gemini"\]\[data-ace-native-launcher="true"\]/.test(sourceText), "Gemini should get native launcher styling");
+assert(/PROVIDER_MESSAGE_SELECTOR_GROUPS/.test(sourceText), "Provider scrapers should prefer precise selector groups");
+assert(/messageSelectableElement/.test(sourceText), "Selection state should attach to visible message anchors");
+assert(/USER_MESSAGE_ANCHOR_SELECTOR/.test(sourceText) && /ASSISTANT_MESSAGE_ANCHOR_SELECTOR/.test(sourceText), "Selection anchors should be role-aware");
 
 console.log("Smoke tests passed");

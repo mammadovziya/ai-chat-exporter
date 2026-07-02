@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.11
+
+- Fixed ChatGPT selection targets attaching to broad conversation wrappers.
+- Made ChatGPT scraping prefer real conversation turns and author-role nodes
+  before broad message-list containers.
+- Moved selected outlines and click handlers onto role-aware message anchors
+  so selectors stay beside the visible message content.
+
 ## 1.1.10
 
 - Changed ChatGPT/OpenAI and Gemini launcher buttons to always show a download

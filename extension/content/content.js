@@ -10,6 +10,48 @@
   const VALID_FORMATS = new Set(["markdown", "pdf", "text", "json", "csv", "png"]);
   const VALID_PAPER_SIZES = new Set(["a4", "letter"]);
   const VALID_THEMES = new Set(["light", "dark"]);
+  const USER_MESSAGE_ANCHOR_SELECTOR = [
+    ".font-user-message",
+    "user-query",
+    "user-query .query-text",
+    "[class*='font-user-message']",
+    "[class*='query-text' i]",
+    "[class*='whitespace-pre-wrap' i]",
+    "[data-testid='user-message']",
+    "[data-testid*='user-message' i]",
+    "[data-message-author-role='user']",
+    "[data-author='user']",
+    "[data-role='user']",
+    "[data-testid*='user-query' i]",
+    "[data-test-id*='user-query' i]",
+    "[class*='user-query' i]",
+    "[aria-label*='You said' i]"
+  ].join(",");
+  const ASSISTANT_MESSAGE_ANCHOR_SELECTOR = [
+    ".font-claude-message",
+    ".markdown",
+    ".prose",
+    "model-response",
+    "model-response message-content",
+    "response-container",
+    ".model-response-text",
+    "[class*='font-claude-message']",
+    "[class*='prose' i]",
+    "[class*='response-content' i]",
+    "[class*='response-container' i]",
+    "[class*='model-response' i]",
+    "[class*='assistant-message' i]",
+    "[data-testid='assistant-message']",
+    "[data-testid*='assistant-message' i]",
+    "[data-testid*='bot-message' i]",
+    "[data-testid*='model-response' i]",
+    "[data-test-id*='model-response' i]",
+    "[data-test-id*='response' i]",
+    "[data-message-author-role='assistant']",
+    "[data-author='assistant']",
+    "[data-role='assistant']",
+    "[data-role='model']"
+  ].join(",");
   const MESSAGE_ANCHOR_SELECTOR = [
     ".font-user-message",
     ".font-claude-message",
@@ -22,6 +64,7 @@
     "[data-message-author-role]",
     "[data-author]",
     "[data-role]",
+    "[class*='whitespace-pre-wrap' i]",
     "[class*='message' i]",
     "[class*='user-query' i]",
     "[class*='model-response' i]",
@@ -432,7 +475,7 @@
   function updateInlineSelectionState() {
     for (const message of state.messages) {
       const selected = state.selectedIds.has(message.id);
-      const element = message.element;
+      const element = messageSelectableElement(message);
       const button = selectionRail?.querySelector(`.ace-chat-select-button[data-message-id="${CSS.escape(message.id)}"]`);
 
       if (element) {
@@ -514,34 +557,96 @@
     return window.innerWidth - 12;
   }
 
-  function messageAnchorRect(message) {
+  function roleAnchorSelector(message) {
+    return message.role === "assistant" ? ASSISTANT_MESSAGE_ANCHOR_SELECTOR : USER_MESSAGE_ANCHOR_SELECTOR;
+  }
+
+  function candidateRect(candidate, fallback) {
+    const rect = candidate.getBoundingClientRect();
+    const text = (candidate.innerText || candidate.textContent || "").trim();
+    if (
+      text.length < 2 ||
+      rect.width < 24 ||
+      rect.height < 12 ||
+      rect.bottom < fallback.top ||
+      rect.top > fallback.bottom
+    ) {
+      return null;
+    }
+
+    return { rect, textLength: text.length };
+  }
+
+  function scoreAnchorCandidate(candidate, message, fallback, rect, textLength, roleSpecific) {
+    let score = roleSpecific ? 1000 : 0;
+    const fallbackWidth = Math.max(1, fallback.width);
+    const outerWrapper = rect.width > Math.min(window.innerWidth * 0.72, 960) && rect.width / fallbackWidth > 0.94;
+
+    if (candidate === message.element) {
+      score += roleSpecific ? 80 : 0;
+      score -= outerWrapper ? 480 : 0;
+    }
+
+    const widthRatio = rect.width / fallbackWidth;
+    if (widthRatio < 0.92) {
+      score += 140;
+    }
+
+    if (message.role === "user") {
+      score += rect.left > fallback.left + fallbackWidth * 0.25 ? 180 : 0;
+      score += Math.min(180, rect.left - fallback.left);
+      score -= Math.max(0, rect.width - 720) * 0.3;
+    } else {
+      score += Math.min(140, rect.width * 0.08);
+      score -= rect.width > window.innerWidth * 0.88 ? 220 : 0;
+    }
+
+    score += Math.min(120, textLength * 0.25);
+    score += Math.min(80, rect.right * 0.02);
+    return score;
+  }
+
+  function bestAnchorFromSelector(message, selector, roleSpecific) {
     const element = message.element;
     if (!(element instanceof Element)) {
       return null;
     }
 
     const fallback = element.getBoundingClientRect();
-    const candidates = [element, ...Array.from(element.querySelectorAll(MESSAGE_ANCHOR_SELECTOR))]
-      .filter((candidate) => {
+    const candidates = [element, ...Array.from(element.querySelectorAll(selector))]
+      .map((candidate) => {
         if (!(candidate instanceof Element) || candidate.closest("#ace-exporter-panel, .ace-selection-rail, .ace-chat-select-button, .ace-exporter-toast")) {
-          return false;
+          return null;
         }
 
-        const text = (candidate.innerText || candidate.textContent || "").trim();
-        const rect = candidate.getBoundingClientRect();
-        return text.length >= 2 && rect.width >= 24 && rect.height >= 12 && rect.bottom >= fallback.top && rect.top <= fallback.bottom;
+        const measured = candidateRect(candidate, fallback);
+        return measured ? { candidate, ...measured } : null;
       })
-      .map((candidate) => ({
-        rect: candidate.getBoundingClientRect(),
-        textLength: (candidate.innerText || candidate.textContent || "").trim().length
-      }))
+      .filter(Boolean)
       .sort((left, right) => (
-        right.rect.right - left.rect.right ||
-        right.rect.width - left.rect.width ||
-        right.textLength - left.textLength
+        scoreAnchorCandidate(right.candidate, message, fallback, right.rect, right.textLength, roleSpecific) -
+        scoreAnchorCandidate(left.candidate, message, fallback, left.rect, left.textLength, roleSpecific)
       ));
 
-    return candidates[0]?.rect || fallback;
+    return candidates[0]?.candidate || null;
+  }
+
+  function messageSelectableElement(message) {
+    const roleAnchor = bestAnchorFromSelector(message, roleAnchorSelector(message), true);
+    if (roleAnchor) {
+      return roleAnchor;
+    }
+
+    return bestAnchorFromSelector(message, MESSAGE_ANCHOR_SELECTOR, false) || message.element;
+  }
+
+  function messageAnchorRect(message) {
+    const element = messageSelectableElement(message);
+    if (!(element instanceof Element)) {
+      return null;
+    }
+
+    return element.getBoundingClientRect();
   }
 
   function selectionButtonLeft(rect) {
@@ -658,7 +763,12 @@
         continue;
       }
 
-      message.element.classList.add("ace-chat-selectable");
+      const selectableElement = messageSelectableElement(message);
+      if (!selectableElement || !document.documentElement.contains(selectableElement)) {
+        continue;
+      }
+
+      selectableElement.classList.add("ace-chat-selectable");
       const messageClickHandler = (event) => {
         if (isInteractiveTarget(event.target) || window.getSelection()?.toString()) {
           return;
@@ -668,8 +778,8 @@
         event.stopPropagation();
         toggleMessageSelection(message.id);
       };
-      message.element.addEventListener("click", messageClickHandler, true);
-      messageClickHandlers.set(message.element, messageClickHandler);
+      selectableElement.addEventListener("click", messageClickHandler, true);
+      messageClickHandlers.set(selectableElement, messageClickHandler);
 
       const button = document.createElement("button");
       button.type = "button";

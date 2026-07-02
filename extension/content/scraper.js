@@ -49,6 +49,29 @@
     ].join(",")
   };
 
+  const PROVIDER_MESSAGE_SELECTOR_GROUPS = {
+    chatgpt: [
+      [
+        "[data-testid^='conversation-turn-']",
+        "[data-testid*='conversation-turn' i]",
+        "[data-message-author-role]"
+      ].join(","),
+      [
+        "article"
+      ].join(","),
+      [
+        "[data-testid*='chat-message' i]",
+        "[data-testid*='message' i]"
+      ].join(",")
+    ],
+    gemini: [
+      PROVIDER_MESSAGE_SELECTORS.gemini
+    ],
+    grok: [
+      PROVIDER_MESSAGE_SELECTORS.grok
+    ]
+  };
+
   const ASSISTANT_FEEDBACK_SELECTOR = [
     'button[aria-label*="Give positive feedback" i]',
     'button[aria-label*="positive feedback" i]',
@@ -340,6 +363,10 @@
   }
 
   function getConversationRoot() {
+    if (currentProviderId() === "chatgpt") {
+      return document.querySelector("main") || document.body;
+    }
+
     return (
       document.querySelector("main [data-testid*='conversation' i]") ||
       document.querySelector("main [data-testid*='chat' i]") ||
@@ -872,13 +899,20 @@
   }
 
   function collectProviderEntries(root) {
-    const selector = PROVIDER_MESSAGE_SELECTORS[currentProviderId()];
-    if (!selector) {
+    const selectors = PROVIDER_MESSAGE_SELECTOR_GROUPS[currentProviderId()] || [PROVIDER_MESSAGE_SELECTORS[currentProviderId()]];
+    if (!selectors[0]) {
       return [];
     }
 
-    const candidates = removeNestedCandidates(Array.from(root.querySelectorAll(selector))
-      .filter((element) => isCandidate(element) && !isDateOnlyText(cleanNodeText(element))));
+    let candidates = [];
+    for (const selector of selectors) {
+      candidates = removeNestedCandidates(Array.from(root.querySelectorAll(selector))
+        .filter((element) => isCandidate(element) && !isDateOnlyText(cleanNodeText(element))));
+
+      if (candidates.length > 1) {
+        break;
+      }
+    }
 
     return candidates.map((element, index) => {
       const role = contentRole(element) || inferRole(element, index);
