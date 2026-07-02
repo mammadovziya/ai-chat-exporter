@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0
+
+- Added one-extension support for Claude, ChatGPT, Gemini, and Grok.
+- Added provider-aware host permissions, popup routing, export labels,
+  filenames, and metadata.
+- Added provider-aware native button placement and message selectors.
+- Kept site access limited to supported AI chat domains.
+
 ## 1.0.1
 
 - Added local syntax highlighting for exported code blocks in PDF and PNG

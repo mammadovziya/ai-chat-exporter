@@ -2,6 +2,7 @@
   "use strict";
 
   const api = globalScope.browser || globalScope.chrome;
+  const providers = globalScope.ACEProviders;
   const button = document.getElementById("open-exporter");
   const status = document.getElementById("status");
 
@@ -45,22 +46,14 @@
     });
   }
 
-  function isClaudeUrl(url) {
-    try {
-      return /(^|\.)claude\.ai$/i.test(new URL(url).hostname);
-    } catch (error) {
-      return false;
-    }
-  }
-
   async function openExporter() {
     button.disabled = true;
     setStatus("Opening exporter...");
 
     try {
       const tab = await queryActiveTab();
-      if (!tab?.id || !isClaudeUrl(tab.url || "")) {
-        setStatus("Open a Claude chat first.");
+      if (!tab?.id || !providers?.isSupportedUrl(tab.url || "")) {
+        setStatus("Open Claude, ChatGPT, Gemini, or Grok first.");
         return;
       }
 
@@ -71,9 +64,9 @@
         return;
       }
 
-      setStatus("Reload the Claude tab, then try again.");
+      setStatus("Reload the chat tab, then try again.");
     } catch (error) {
-      setStatus("Reload the Claude tab, then try again.");
+      setStatus("Reload the chat tab, then try again.");
     } finally {
       button.disabled = false;
     }

@@ -1,19 +1,27 @@
-(function attachClaudeScraper(globalScope) {
+(function attachAiChatScraper(globalScope) {
   "use strict";
 
   const utils = globalScope.ACEUtils;
+  const providers = globalScope.ACEProviders;
 
   const ACTION_GROUP_SELECTOR = [
     '[role="group"][aria-label="Message actions"]',
+    '[role="group"][aria-label*="message" i]',
     '[aria-label="Message actions"]',
-    '[data-testid*="message-actions" i]'
+    '[aria-label*="message actions" i]',
+    '[data-testid*="message-actions" i]',
+    '[data-testid*="copy-turn-action" i]',
+    '[data-testid*="response-actions" i]'
   ].join(",");
 
   const ASSISTANT_FEEDBACK_SELECTOR = [
     'button[aria-label*="Give positive feedback" i]',
     'button[aria-label*="positive feedback" i]',
     'button[aria-label*="thumbs up" i]',
+    'button[aria-label*="good response" i]',
     'button[aria-label*="like" i]',
+    'button[aria-label*="regenerate" i]',
+    'button[aria-label*="read aloud" i]',
     '[data-testid*="feedback" i]'
   ].join(",");
 
@@ -24,17 +32,30 @@
     "[data-testid*='user-message' i]",
     "[data-message-author-role='user']",
     "[data-author='user']",
-    "[data-role='user']"
+    "[data-role='user']",
+    "[data-testid*='user-query' i]",
+    "[data-test-id*='user-query' i]",
+    "[class*='user-query' i]",
+    "[aria-label*='You said' i]"
   ].join(",");
 
   const ASSISTANT_CONTENT_SELECTOR = [
     ".font-claude-message",
+    ".markdown",
+    ".model-response-text",
     "[class*='font-claude-message']",
+    "[class*='model-response' i]",
+    "[class*='assistant-message' i]",
     "[data-testid='assistant-message']",
     "[data-testid*='assistant-message' i]",
+    "[data-testid*='bot-message' i]",
+    "[data-testid*='model-response' i]",
+    "[data-test-id*='model-response' i]",
+    "[data-test-id*='response' i]",
     "[data-message-author-role='assistant']",
     "[data-author='assistant']",
-    "[data-role='assistant']"
+    "[data-role='assistant']",
+    "[data-role='model']"
   ].join(",");
 
   const ROLE_CONTENT_SELECTOR = `${USER_CONTENT_SELECTOR},${ASSISTANT_CONTENT_SELECTOR}`;
@@ -51,12 +72,18 @@
         "[data-testid='assistant-message']",
         "[data-testid*='user-message' i]",
         "[data-testid*='assistant-message' i]",
+        "[data-testid*='user-query' i]",
+        "[data-testid*='model-response' i]",
+        "[data-test-id*='user-query' i]",
+        "[data-test-id*='model-response' i]",
         "[data-message-author-role='user']",
         "[data-message-author-role='assistant']",
         "[data-author='user']",
         "[data-author='assistant']",
         "[data-role='user']",
-        "[data-role='assistant']"
+        "[data-role='assistant']",
+        "[data-role='model']",
+        ".model-response-text"
       ].join(",")
     },
     {
@@ -67,6 +94,13 @@
         '[data-testid*="chat-message" i]',
         '[data-testid*="message-row" i]',
         '[data-testid*="message" i]',
+        '[data-test-id*="conversation" i]',
+        '[data-test-id*="chat" i]',
+        '[data-test-id*="message" i]',
+        '[data-turn]',
+        '[data-message-id]',
+        ".conversation-turn",
+        ".message-content",
         "article"
       ].join(",")
     }
@@ -75,6 +109,7 @@
   const REMOVE_SELECTORS = [
     "#ace-exporter-launcher",
     "#ace-exporter-panel",
+    ".ace-selection-rail",
     ".ace-chat-select-button",
     ".ace-exporter-toast",
     "aside",
@@ -101,13 +136,18 @@
     "[data-testid*='sidebar' i]",
     "[data-testid*='disclaimer' i]",
     "[class*='sidebar' i]",
+    "[class*='conversation-starter' i]",
     "[class*='disclaimer' i]",
-    "[href*='support.anthropic.com']"
+    "[href*='support.anthropic.com']",
+    "[href*='support.google.com']",
+    "[href*='help.openai.com']"
   ];
 
-  const TRANSCRIPT_MARKER_PATTERN = /^\s*(you said|claude responded|claude said|assistant responded|assistant said)\s*:\s*/i;
-  const MARKDOWN_TRANSCRIPT_MARKER_PATTERN = /^\s*(?:#{1,6}\s*)?(you said|claude responded|claude said|assistant responded|assistant said)\s*:\s*/i;
-  const CLAUDE_FOOTER_PATTERN = /\n*\[?Claude is AI and can make mistakes[\s\S]*$/i;
+  const TRANSCRIPT_MARKER_PATTERN = providers?.transcriptMarkerPattern("^\\s*") ||
+    /^\s*(you said|claude responded|claude said|assistant responded|assistant said)\s*:\s*/i;
+  const MARKDOWN_TRANSCRIPT_MARKER_PATTERN = providers?.transcriptMarkerPattern("^\\s*(?:#{1,6}\\s*)?") ||
+    /^\s*(?:#{1,6}\s*)?(you said|claude responded|claude said|assistant responded|assistant said)\s*:\s*/i;
+  const AI_FOOTER_PATTERN = /\n*\[?(Claude|ChatGPT|Gemini|Grok|AI|Google Gemini) (is|can be) (AI|an AI)?[^.\n]*can make mistakes[\s\S]*$/i;
   const DATE_ONLY_PATTERN = /^(today|yesterday|mon(day)?|tue(sday)?|wed(nesday)?|thu(rsday)?|fri(day)?|sat(urday)?|sun(day)?|jan(uary)?|feb(ruary)?|mar(ch)?|apr(il)?|may|jun(e)?|jul(y)?|aug(ust)?|sep(tember)?|oct(ober)?|nov(ember)?|dec(ember)?)\.?\s+\d{1,2}(,\s*\d{4})?$/i;
   const MATH_TAGS = new Set([
     "annotation",
@@ -233,7 +273,11 @@
   function getConversationRoot() {
     return (
       document.querySelector("main [data-testid*='conversation' i]") ||
+      document.querySelector("main [data-testid*='chat' i]") ||
       document.querySelector("main [class*='conversation' i]") ||
+      document.querySelector("main [class*='chat' i]") ||
+      document.querySelector("main [data-test-id*='conversation' i]") ||
+      document.querySelector("main [data-test-id*='chat' i]") ||
       document.querySelector("main") ||
       document.body
     );
@@ -306,21 +350,26 @@
       element.getAttribute("data-author"),
       element.getAttribute("data-role")
     ].join(" ").toLowerCase();
+    const providerPattern = providers?.productPattern?.() || /\b(assistant|claude|model)\b/i;
     const signature = [
       element.getAttribute("data-testid"),
+      element.getAttribute("data-test-id"),
       element.getAttribute("aria-label"),
       classText(element),
       element.querySelector("[data-testid*='role' i]")?.textContent,
       element.querySelector("[aria-label*='Claude' i]")?.getAttribute("aria-label"),
+      element.querySelector("[aria-label*='ChatGPT' i]")?.getAttribute("aria-label"),
+      element.querySelector("[aria-label*='Gemini' i]")?.getAttribute("aria-label"),
+      element.querySelector("[aria-label*='Grok' i]")?.getAttribute("aria-label"),
       element.querySelector("[aria-label*='assistant' i]")?.getAttribute("aria-label"),
       element.querySelector("[aria-label*='user' i]")?.getAttribute("aria-label")
     ].join(" ").toLowerCase();
 
-    if (/\b(user|human)\b/.test(roleAttributes) || /\b(font-user-message|user-message|you said|human-message)\b/.test(signature)) {
+    if (/\b(user|human)\b/.test(roleAttributes) || /\b(font-user-message|user-message|user-query|you said|human-message)\b/.test(signature)) {
       return "user";
     }
 
-    if (/\b(assistant|claude|model)\b/.test(roleAttributes) || /\b(font-claude-message|assistant-message|claude responded|claude|assistant|model)\b/.test(signature)) {
+    if (/\b(assistant|model|bot)\b/.test(roleAttributes) || /\b(font-claude-message|assistant-message|model-response|bot-message|markdown)\b/.test(signature) || providerPattern.test(signature)) {
       return "assistant";
     }
 
@@ -681,7 +730,7 @@
   }
 
   function stripKnownFooter(value) {
-    return utils.normalizeWhitespace(String(value ?? "").replace(CLAUDE_FOOTER_PATTERN, ""));
+    return utils.normalizeWhitespace(String(value ?? "").replace(AI_FOOTER_PATTERN, ""));
   }
 
   function messageId(role, text, index) {
@@ -862,7 +911,7 @@
   }
 
   function roleFromTranscriptMarker(value) {
-    return /^you said/i.test(value) ? "user" : "assistant";
+    return /^(you|user|human)\s+said/i.test(value) ? "user" : "assistant";
   }
 
   function transcriptMarkerElements(root) {
@@ -936,7 +985,21 @@
 
   function splitTranscriptByMarkdown(root) {
     const markdown = htmlToMarkdown(root);
-    const markerPattern = /(?:^|\n)#{1,6}\s*(You said|Claude responded|Claude said|Assistant responded|Assistant said)\s*:\s*/gi;
+    const markerPattern = new RegExp(`(?:^|\\n)#{1,6}\\s*(${[
+      "You said",
+      "User said",
+      "Human said",
+      "Claude responded",
+      "Claude said",
+      "ChatGPT responded",
+      "ChatGPT said",
+      "Gemini responded",
+      "Gemini said",
+      "Grok responded",
+      "Grok said",
+      "Assistant responded",
+      "Assistant said"
+    ].join("|")})\\s*:\\s*`, "gi");
     const markers = [];
     let match;
 
@@ -980,8 +1043,8 @@
 
     const text = messages[0].text;
     return (
-      /New chat|All chats|Projects|Artifacts/i.test(text) &&
-      /You said|Claude responded/i.test(text)
+      /New chat|All chats|Projects|Artifacts|Explore|Recent|History/i.test(text) &&
+      /You said|Claude responded|ChatGPT said|Gemini said|Grok said|Assistant responded/i.test(text)
     );
   }
 
@@ -1014,9 +1077,14 @@
       messages,
       title: utils.defaultConversationTitle(),
       url: window.location.href,
+      provider: providers?.current?.() || null,
       scrapedAt: new Date().toISOString()
     };
   }
+
+  globalScope.ACEChatScraper = {
+    scrape
+  };
 
   globalScope.ACEClaudeScraper = {
     scrape

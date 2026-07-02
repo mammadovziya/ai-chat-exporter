@@ -10,7 +10,8 @@ npm run check
 ```
 
 Load `dist/chrome` in Chrome or `dist/firefox/manifest.json` in Firefox while
-developing.
+developing. Test changes on Claude, ChatGPT, Gemini, and Grok when touching the
+scraper or native launcher.
 
 ## Pull Request Checklist
 
@@ -23,6 +24,6 @@ developing.
 
 ## Scraper Changes
 
-Claude markup can change frequently. Prefer resilient, specific selectors and
-fallbacks over broad page scraping. Treat all page content as untrusted and keep
-export HTML sanitized.
+AI chat app markup can change frequently. Prefer provider-aware, specific
+selectors and fallbacks over broad page scraping. Treat all page content as
+untrusted and keep export HTML sanitized.

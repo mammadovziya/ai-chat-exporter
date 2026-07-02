@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AI Chat Exporter",
-  "version": "1.0.1",
-  "description": "Export Claude chats to PDF, Markdown, Text, JSON, CSV, and PNG. Local-first and privacy-first.",
+  "version": "1.1.0",
+  "description": "Export AI chats from Claude, ChatGPT, Gemini, and Grok to PDF, Markdown, Text, JSON, CSV, and PNG. Local-first and privacy-first.",
   "browser_specific_settings": {
     "gecko": {
       "id": "ai-chat-exporter@example.com",
@@ -30,16 +30,29 @@
   ],
   "host_permissions": [
     "https://claude.ai/*",
-    "https://*.claude.ai/*"
+    "https://*.claude.ai/*",
+    "https://chatgpt.com/*",
+    "https://*.chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://gemini.google.com/*",
+    "https://grok.com/*",
+    "https://*.grok.com/*"
   ],
   "content_scripts": [
     {
       "matches": [
         "https://claude.ai/*",
-        "https://*.claude.ai/*"
+        "https://*.claude.ai/*",
+        "https://chatgpt.com/*",
+        "https://*.chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://gemini.google.com/*",
+        "https://grok.com/*",
+        "https://*.grok.com/*"
       ],
       "js": [
         "shared/utils.js",
+        "shared/providers.js",
         "content/scraper.js",
         "content/exporters.js",
         "content/content.js"

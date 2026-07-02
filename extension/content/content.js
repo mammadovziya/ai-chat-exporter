@@ -2,7 +2,8 @@
   "use strict";
 
   const utils = globalScope.ACEUtils;
-  const scraper = globalScope.ACEClaudeScraper;
+  const providers = globalScope.ACEProviders;
+  const scraper = globalScope.ACEChatScraper || globalScope.ACEClaudeScraper;
   const exporters = globalScope.ACEExporters;
 
   const state = {
@@ -16,6 +17,9 @@
       muteExport: false,
       pageNumbers: true,
       paperSize: "a4",
+      providerId: providers?.current?.()?.id || "ai",
+      providerName: providers?.current?.()?.name || "AI Chat",
+      assistantLabel: providers?.current?.()?.assistantLabel || "Assistant",
       theme: "light",
       title: utils.defaultConversationTitle()
     }
@@ -62,8 +66,20 @@
     });
   }
 
-  function isClaudePage() {
-    return /(^|\.)claude\.ai$/i.test(window.location.hostname);
+  function currentProvider() {
+    return providers?.current?.() || {
+      assistantLabel: "Assistant",
+      id: "ai",
+      name: "AI Chat"
+    };
+  }
+
+  function assistantLabel() {
+    return currentProvider().assistantLabel || currentProvider().name || "Assistant";
+  }
+
+  function isSupportedPage() {
+    return Boolean(currentProvider().id !== "ai");
   }
 
   function currentRouteKey() {
@@ -78,6 +94,9 @@
     state.selectionMode = false;
     state.options.filename = utils.createDefaultFilename();
     state.options.title = "";
+    state.options.providerId = currentProvider().id;
+    state.options.providerName = currentProvider().name;
+    state.options.assistantLabel = assistantLabel();
 
     if (panel) {
       panel.hidden = true;
@@ -201,9 +220,13 @@
   function refreshMessages({ keepSelection = true } = {}) {
     const previous = new Set(state.selectedIds);
     const result = scraper.scrape();
+    const provider = result.provider || currentProvider();
     applyNativeTheme();
     state.messages = result.messages;
     state.options.title = state.options.title || result.title;
+    state.options.providerId = provider.id;
+    state.options.providerName = provider.name;
+    state.options.assistantLabel = provider.assistantLabel || provider.name || "Assistant";
 
     state.selectedIds = new Set();
     for (const message of state.messages) {
@@ -249,7 +272,7 @@
 
       if (button) {
         button.setAttribute("aria-pressed", String(selected));
-        button.setAttribute("aria-label", `${selected ? "Deselect" : "Select"} ${message.role === "assistant" ? "Claude" : "your"} message`);
+        button.setAttribute("aria-label", `${selected ? "Deselect" : "Select"} ${message.role === "assistant" ? assistantLabel() : "your"} message`);
         button.dataset.selected = String(selected);
         button.textContent = selected ? "\u2713" : "";
       }
@@ -418,9 +441,9 @@
       button.dataset.messageId = message.id;
       button.dataset.role = message.role;
       button.dataset.theme = detectClaudeTheme();
-      button.setAttribute("aria-label", `${state.selectedIds.has(message.id) ? "Deselect" : "Select"} ${message.role === "assistant" ? "Claude" : "your"} message`);
+      button.setAttribute("aria-label", `${state.selectedIds.has(message.id) ? "Deselect" : "Select"} ${message.role === "assistant" ? assistantLabel() : "your"} message`);
       button.setAttribute("aria-pressed", String(state.selectedIds.has(message.id)));
-      button.title = message.role === "assistant" ? "Claude message" : "Your message";
+      button.title = message.role === "assistant" ? `${assistantLabel()} message` : "Your message";
       button.textContent = state.selectedIds.has(message.id) ? "\u2713" : "";
       button.addEventListener("click", (event) => {
         event.preventDefault();
@@ -459,6 +482,9 @@
       muteExport: Boolean(optionValue("muteExport")),
       pageNumbers: Boolean(optionValue("pageNumbers")),
       paperSize: optionValue("paperSize") || "a4",
+      providerId: currentProvider().id,
+      providerName: currentProvider().name,
+      assistantLabel: assistantLabel(),
       theme: optionValue("theme") || "light",
       title: optionValue("title") || utils.defaultConversationTitle()
     };
@@ -499,7 +525,7 @@
       return `
         <div class="ace-empty-state">
           <strong>No messages found</strong>
-          <span>Open a Claude chat, then refresh.</span>
+          <span>Open a supported AI chat, then refresh.</span>
         </div>
       `;
     }
@@ -510,7 +536,7 @@
         <label class="ace-message-row">
           <input type="checkbox" data-message-id="${utils.escapeHtml(message.id)}"${checked}>
           <span class="ace-message-index">${message.index + 1}</span>
-          <span class="ace-role-badge" data-role="${utils.escapeHtml(message.role)}">${message.role === "assistant" ? "Claude" : "You"}</span>
+          <span class="ace-role-badge" data-role="${utils.escapeHtml(message.role)}">${message.role === "assistant" ? utils.escapeHtml(assistantLabel()) : "You"}</span>
           <span class="ace-message-preview">${utils.escapeHtml(message.preview || "(empty message)")}</span>
         </label>
       `;
@@ -551,7 +577,7 @@
         <section class="ace-selection-toolbar">
           <button type="button" data-action="refresh" title="Refresh detected messages"><span class="ace-button-content">${iconSvg("refresh")}<span>Refresh</span></span></button>
           <button type="button" data-action="select-all" title="Alt+A"><span class="ace-button-content">${iconSvg("checkAll")}<span>All</span></span></button>
-          <button type="button" data-action="select-assistant" title="Alt+C"><span class="ace-button-content">${iconSvg("bot")}<span>Claude</span></span></button>
+          <button type="button" data-action="select-assistant" title="Alt+C"><span class="ace-button-content">${iconSvg("bot")}<span>${utils.escapeHtml(assistantLabel())}</span></span></button>
           <button type="button" data-action="select-user" title="Alt+Y"><span class="ace-button-content">${iconSvg("user")}<span>You</span></span></button>
           <button type="button" data-action="clear" title="Alt+N"><span class="ace-button-content">${iconSvg("xSquare")}<span>None</span></span></button>
         </section>
@@ -755,14 +781,22 @@
     }
 
     const label = buttonLabel(element);
-    return /\bshare\b/i.test(label) && isVisibleElement(element);
+    if (/\b(send|stop|voice|microphone|attach|upload|new chat|settings|profile|sign in|log in)\b/i.test(label)) {
+      return false;
+    }
+
+    return /\b(share|export|download|copy link|copy chat|more|options)\b/i.test(label) && isVisibleElement(element);
   }
 
   function findShareButton() {
     const candidates = Array.from(document.querySelectorAll("button, a[role='button']"))
       .filter(isShareButton);
 
-    return candidates.find((button) => button.closest("header")) || candidates[0] || null;
+    return candidates.find((button) => /\bshare\b/i.test(buttonLabel(button)) && button.closest("header")) ||
+      candidates.find((button) => button.closest("header")) ||
+      candidates.find((button) => /\bshare\b/i.test(buttonLabel(button))) ||
+      candidates[0] ||
+      null;
   }
 
   function replaceTextNodes(root, searchPattern, replacement) {
@@ -796,7 +830,7 @@
     button.removeAttribute("href");
     button.setAttribute("role", "button");
 
-    if (!replaceTextNodes(button, /\bshare\b/gi, "Export")) {
+    if (!replaceTextNodes(button, /\b(share|download|copy link|copy chat|more|options)\b/gi, "Export")) {
       button.textContent = "Export";
     }
 
@@ -821,7 +855,7 @@
   }
 
   function placeLauncher() {
-    if (!isClaudePage()) {
+    if (!isSupportedPage()) {
       return;
     }
 
@@ -881,7 +915,7 @@
   }
 
   function ensureLauncher() {
-    if (!isClaudePage()) {
+    if (!isSupportedPage()) {
       return;
     }
 
@@ -916,7 +950,7 @@
     }
   }
 
-  if (isClaudePage()) {
+  if (isSupportedPage()) {
     installRouteChangeWatcher();
     ensureLauncher();
     attachRuntimeListener();

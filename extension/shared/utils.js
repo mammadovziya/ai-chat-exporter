@@ -117,16 +117,18 @@
   }
 
   function defaultConversationTitle() {
-    const title = document.title
+    const providers = globalScope.ACEProviders;
+    const title = (providers?.removeTitleBrand(document.title) || document.title
       .replace(/\s*-\s*Claude\s*$/i, "")
       .replace(/\s*\|\s*Claude\s*$/i, "")
-      .trim();
+      .trim());
 
-    return title || "Claude Conversation";
+    return title || `${providers?.current()?.name || "AI"} Conversation`;
   }
 
   function createDefaultFilename() {
-    return `claude-chat-${timestampForFilename()}`;
+    const prefix = globalScope.ACEProviders?.current()?.filenamePrefix || "ai-chat";
+    return `${prefix}-${timestampForFilename()}`;
   }
 
   function downloadBlob(blob, filename) {

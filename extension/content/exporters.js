@@ -18,7 +18,8 @@
       source: window.location.href,
       exportedAt: new Date().toISOString(),
       messageCount: messages.length,
-      app: "AI Chat Exporter"
+      app: "AI Chat Exporter",
+      provider: options.providerName || globalScope.ACEProviders?.current?.()?.name || "AI Chat"
     };
   }
 
@@ -26,8 +27,8 @@
     return utils.withExtension(options.filename || utils.createDefaultFilename(), format);
   }
 
-  function roleLabel(role) {
-    return role === "assistant" ? "Claude" : "User";
+  function roleLabel(role, options = {}) {
+    return role === "assistant" ? (options.assistantLabel || "Assistant") : "User";
   }
 
   function languageFromClassList(element) {
@@ -87,7 +88,7 @@
     ];
 
     for (const message of messages) {
-      parts.push(`## ${message.index + 1}. ${roleLabel(message.role)}`, "", message.markdown || message.text, "");
+      parts.push(`## ${message.index + 1}. ${roleLabel(message.role, options)}`, "", message.markdown || message.text, "");
     }
 
     return parts.join("\n").replace(/\n{4,}/g, "\n\n\n").trim() + "\n";
@@ -104,7 +105,7 @@
     ];
 
     for (const message of messages) {
-      parts.push(`[${message.index + 1}] ${roleLabel(message.role)}`, message.text, "");
+      parts.push(`[${message.index + 1}] ${roleLabel(message.role, options)}`, message.text, "");
     }
 
     return parts.join("\n").replace(/\n{4,}/g, "\n\n\n").trim() + "\n";
@@ -123,7 +124,7 @@
         metadata.source,
         metadata.exportedAt,
         message.index + 1,
-        roleLabel(message.role),
+        roleLabel(message.role, options),
         message.text
       ])
     ];
@@ -137,7 +138,7 @@
       messages: messages.map((message) => ({
         index: message.index + 1,
         role: message.role,
-        label: roleLabel(message.role),
+        label: roleLabel(message.role, options),
         text: message.text,
         markdown: message.markdown,
         html: message.html
@@ -395,10 +396,10 @@
 
   function buildHtmlDocument(messages, options) {
     const metadata = exportMetadata(messages, options);
-    const messageHtml = messages.map((message) => `
+    const messageArticles = messages.map((message) => `
       <article class="ace-export-message">
         <header class="ace-export-message-header">
-          <span>${utils.escapeHtml(roleLabel(message.role))}</span>
+          <span>${utils.escapeHtml(roleLabel(message.role, options))}</span>
           <span>#${message.index + 1}</span>
         </header>
         <div class="ace-export-message-body">
@@ -413,11 +414,12 @@
           <h1>${utils.escapeHtml(metadata.title)}</h1>
           <div class="ace-export-meta">
             <span>Source: ${utils.escapeHtml(metadata.source)}</span>
+            <span>Provider: ${utils.escapeHtml(metadata.provider)}</span>
             <span>Exported: ${utils.escapeHtml(metadata.exportedAt)}</span>
             <span>Messages: ${metadata.messageCount}</span>
           </div>
         </header>
-        ${messageHtml}
+        ${messageArticles}
       </div>
     `;
   }
@@ -441,7 +443,7 @@
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>${utils.escapeHtml(options.title || "Claude Export")}</title>
+          <title>${utils.escapeHtml(options.title || "AI Chat Export")}</title>
           <style>${exportCss(options)}</style>
         </head>
         <body>
@@ -460,7 +462,7 @@
 
     if (!printWindow) {
       URL.revokeObjectURL(htmlUrl);
-      throw new Error("The print window was blocked. Allow pop-ups for Claude and try again.");
+      throw new Error("The print window was blocked. Allow pop-ups for this chat app and try again.");
     }
 
     window.setTimeout(() => URL.revokeObjectURL(htmlUrl), 60000);

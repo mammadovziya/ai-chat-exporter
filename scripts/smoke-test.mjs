@@ -39,13 +39,19 @@ for (const browserName of ["chrome", "firefox"]) {
   assert(!manifest.permissions?.includes("downloads"), `${browserName} should not request downloads permission`);
   assert(!manifest.permissions?.includes("tabs"), `${browserName} should not request tabs permission`);
   assert(!manifest.host_permissions?.includes("<all_urls>"), `${browserName} should not request all URLs`);
-  assert(manifest.host_permissions?.every((item) => item.includes("claude.ai")), `${browserName} host permissions must stay Claude-scoped`);
+  assert(manifest.host_permissions?.every((item) => /(claude\.ai|chatgpt\.com|chat\.openai\.com|gemini\.google\.com|grok\.com)/.test(item)), `${browserName} host permissions must stay supported-site scoped`);
   assert(manifest.icons?.["128"] === "icons/icon128.png", `${browserName} manifest should include production icons`);
   assert(manifest.action?.default_icon?.["32"] === "icons/icon32.png", `${browserName} action should include toolbar icons`);
 
   const contentScript = manifest.content_scripts?.[0];
   assert(contentScript, `${browserName} missing content script`);
-  assert(contentScript.matches.every((item) => item.includes("claude.ai")), `${browserName} content script must stay Claude-scoped`);
+  assert(contentScript.matches.every((item) => /(claude\.ai|chatgpt\.com|chat\.openai\.com|gemini\.google\.com|grok\.com)/.test(item)), `${browserName} content script must stay supported-site scoped`);
+  assert(contentScript.js.indexOf("shared/providers.js") > contentScript.js.indexOf("shared/utils.js"), `${browserName} provider registry should load after utils`);
+  assert(contentScript.js.indexOf("shared/providers.js") < contentScript.js.indexOf("content/scraper.js"), `${browserName} provider registry should load before scraper`);
+  for (const host of ["claude.ai", "chatgpt.com", "chat.openai.com", "gemini.google.com", "grok.com"]) {
+    assert(manifest.host_permissions?.some((item) => item.includes(host)), `${browserName} host permissions should include ${host}`);
+    assert(contentScript.matches.some((item) => item.includes(host)), `${browserName} content script should include ${host}`);
+  }
 
   for (const jsFile of contentScript.js) {
     const generatedFile = path.join(distDir, browserName, jsFile);
@@ -67,6 +73,9 @@ assert(/format:\s*"pdf"/.test(sourceText), "Exporter should include PDF support"
 assert(/format:\s*"png"/.test(sourceText), "Exporter should include PNG support");
 assert(/font-user-message/.test(sourceText), "Scraper should include Claude user-message selectors");
 assert(/font-claude-message/.test(sourceText), "Scraper should include Claude assistant-message selectors");
+assert(/chatgpt\.com/.test(sourceText) && /gemini\.google\.com/.test(sourceText) && /grok\.com/.test(sourceText), "Extension should support ChatGPT, Gemini, and Grok hosts");
+assert(/ACEProviders/.test(sourceText), "Extension should use provider adapters");
+assert(/model-response/.test(sourceText) && /user-query/.test(sourceText), "Scraper should include Gemini/Grok-style message selectors");
 assert(/You said/.test(sourceText) && /Claude responded/.test(sourceText), "Scraper should include transcript marker fallback");
 assert(/aside/.test(sourceText) && /sidebar/.test(sourceText), "Scraper should remove Claude app sidebar chrome");
 assert(/autoPrint/.test(sourceText), "PDF export should open a self-printing document");
@@ -84,16 +93,16 @@ assert(/collectContentEntries/.test(sourceText), "Scraper should prefer native C
 assert(/DATE_ONLY_PATTERN/.test(sourceText), "Scraper should reject date separators as messages");
 assert(/stripLeadingTranscriptMarker/.test(sourceText), "Scraper should strip You said and Claude responded labels from content");
 assert(!/font-user-message\|user-message\|you said\|human\|user/.test(sourceText), "Role matching should not treat every bare user class as a user message");
-assert(/detectClaudeTheme/.test(sourceText), "Content UI should detect Claude light and dark themes");
-assert(/Export chat/.test(sourceText), "Panel copy should feel like a native Claude action");
+assert(/detectClaudeTheme/.test(sourceText), "Content UI should detect native light and dark themes");
+assert(/Export chat/.test(sourceText), "Panel copy should feel like a native chat action");
 assert(/data-theme/.test(sourceText), "Panel styles should be theme-aware");
 assert(/flex-direction:\s*column/.test(sourceText), "Panel should use a flex column layout");
 assert(/top:\s*72px/.test(sourceText), "Launcher should avoid Claude's bottom composer area");
 assert(/ace-chat-select-button/.test(sourceText), "Messages should be selectable directly in the Claude chat");
 assert(/handleKeyboardShortcuts/.test(sourceText), "Selection mode should include keyboard shortcuts");
 assert(/Alt\+A/.test(sourceText) && /Alt\+N/.test(sourceText), "Selection shortcuts should expose all and none actions");
-assert(/findShareButton/.test(sourceText), "Launcher should find Claude's Share button");
-assert(/makeNativeLauncher/.test(sourceText), "Launcher should clone Claude's Share button style");
+assert(/findShareButton/.test(sourceText), "Launcher should find native share/export buttons");
+assert(/makeNativeLauncher/.test(sourceText), "Launcher should clone native button style");
 assert(/insertAdjacentElement\("afterend", launcher\)/.test(sourceText), "Launcher should sit next to Share");
 assert(/data-ace-native-launcher/.test(sourceText), "Native launcher should avoid floating fallback styles");
 assert(/width:\s*min\(340px/.test(sourceText), "Panel should stay compact so chat messages remain selectable");

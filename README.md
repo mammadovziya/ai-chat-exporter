@@ -1,17 +1,18 @@
 # AI Chat Exporter
 
-Open-source, privacy-first browser extension for exporting Claude conversations
-to PDF, Markdown, Text, JSON, CSV, and PNG.
+Open-source, privacy-first browser extension for exporting Claude, ChatGPT,
+Gemini, and Grok conversations to PDF, Markdown, Text, JSON, CSV, and PNG.
 
 ![AI Chat Exporter overview](docs/visuals/overview.svg)
 
 ## Highlights
 
-- Export Claude chats to PDF, Markdown, Text, JSON, CSV, and PNG.
+- Export Claude, ChatGPT, Gemini, and Grok chats to PDF, Markdown, Text, JSON,
+  CSV, and PNG.
 - Select individual messages directly in the chat with right-side selection
   boxes.
-- Use quick selection controls for all messages, Claude messages, your
-  messages, or none.
+- Use quick selection controls for all messages, assistant messages, your
+  messages, or none. The assistant label follows the current app.
 - Preserve common advanced outputs including block and inline math,
   syntax-highlighted code blocks, tables, lists, headings, and structured
   Claude formatting.
@@ -23,8 +24,8 @@ to PDF, Markdown, Text, JSON, CSV, and PNG.
 
 ## Privacy Model
 
-AI Chat Exporter reads selected content from the Claude page you are viewing and
-generates files locally in your browser.
+AI Chat Exporter reads selected content from the supported AI chat page you are
+viewing and generates files locally in your browser.
 
 It does not:
 
@@ -42,8 +43,11 @@ The extension intentionally keeps permissions narrow:
 
 - `activeTab`: lets the popup talk to the current tab when you click the
   extension.
-- `https://claude.ai/*` and `https://*.claude.ai/*`: lets the content script run
-  only on Claude pages.
+- Claude: `https://claude.ai/*`, `https://*.claude.ai/*`
+- ChatGPT: `https://chatgpt.com/*`, `https://*.chatgpt.com/*`,
+  `https://chat.openai.com/*`
+- Gemini: `https://gemini.google.com/*`
+- Grok: `https://grok.com/*`, `https://*.grok.com/*`
 
 There is no `downloads`, `tabs`, or `<all_urls>` permission.
 
@@ -74,8 +78,8 @@ installation, package and sign the extension through Mozilla Add-ons.
 
 ## Usage
 
-1. Open a conversation on `https://claude.ai`.
-2. Click the native-looking **Export** button next to Claude's share control, or
+1. Open a conversation on Claude, ChatGPT, Gemini, or Grok.
+2. Click the native-looking **Export** button next to the app's share/export controls, or
    open the extension popup and click **Open exporter**.
 3. Select messages using the right-side boxes or the quick selection controls.
 4. Pick an export format.
@@ -84,7 +88,7 @@ installation, package and sign the extension through Mozilla Add-ons.
 Keyboard shortcuts while the panel is open:
 
 - `Alt+A`: select all
-- `Alt+C`: select Claude messages
+- `Alt+C`: select assistant messages
 - `Alt+Y`: select your messages
 - `Alt+N` or `Alt+D`: deselect all
 
@@ -103,7 +107,7 @@ Release artifacts are written to `web-ext-artifacts/`.
 
 ```text
 extension/
-  content/          Claude scraper, export panel, and local file exporters
+  content/          Multi-provider scraper, export panel, and local file exporters
   icons/            Source icon plus generated manifest PNG icons
   shared/           Shared browser utilities
   manifest.*.json   Browser-specific source manifests
@@ -121,8 +125,8 @@ docs/
 - Chrome and Chromium-based browsers with Manifest V3 support.
 - Firefox 121 or newer.
 
-Claude updates its page markup often. The scraper uses multiple selectors and
-fallbacks, but please open an issue if a Claude UI change breaks exports.
+AI chat apps update their page markup often. The scraper uses provider-aware
+selectors and fallbacks, but please open an issue if a UI change breaks exports.
 
 ## Security
 
