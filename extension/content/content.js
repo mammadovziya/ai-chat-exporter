@@ -78,6 +78,14 @@
     return currentProvider().assistantLabel || currentProvider().name || "Assistant";
   }
 
+  function assistantShortLabel() {
+    return currentProvider().shortLabel || assistantLabel();
+  }
+
+  function providerId() {
+    return currentProvider().id || "ai";
+  }
+
   function isSupportedPage() {
     return Boolean(currentProvider().id !== "ai");
   }
@@ -161,6 +169,7 @@
     toast.textContent = message;
     toast.dataset.tone = tone;
     toast.dataset.theme = detectClaudeTheme();
+    toast.dataset.provider = providerId();
     toast.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = window.setTimeout(() => {
@@ -193,16 +202,21 @@
 
   function applyNativeTheme() {
     const theme = detectClaudeTheme();
+    const provider = providerId();
     if (panel) {
       panel.dataset.theme = theme;
+      panel.dataset.provider = provider;
     }
     if (launcher) {
       launcher.dataset.theme = theme;
+      launcher.dataset.provider = provider;
     }
     if (selectionRail) {
       selectionRail.dataset.theme = theme;
+      selectionRail.dataset.provider = provider;
       selectionRail.querySelectorAll(".ace-chat-select-button").forEach((button) => {
         button.dataset.theme = theme;
+        button.dataset.provider = provider;
       });
     }
   }
@@ -311,6 +325,7 @@
       selectionRail = document.createElement("div");
       selectionRail.className = "ace-selection-rail";
       selectionRail.dataset.theme = detectClaudeTheme();
+      selectionRail.dataset.provider = providerId();
       document.documentElement.appendChild(selectionRail);
     }
 
@@ -441,6 +456,7 @@
       button.dataset.messageId = message.id;
       button.dataset.role = message.role;
       button.dataset.theme = detectClaudeTheme();
+      button.dataset.provider = providerId();
       button.setAttribute("aria-label", `${state.selectedIds.has(message.id) ? "Deselect" : "Select"} ${message.role === "assistant" ? assistantLabel() : "your"} message`);
       button.setAttribute("aria-pressed", String(state.selectedIds.has(message.id)));
       button.title = message.role === "assistant" ? `${assistantLabel()} message` : "Your message";
@@ -563,11 +579,11 @@
             <span>Format</span>
             <select data-option="format">${formatOptions()}</select>
           </label>
-          <button type="button" class="ace-toggle-button" data-action="toggle-mute" data-active="${state.options.muteExport}" aria-pressed="${state.options.muteExport}" title="Mute export alerts">
-            <span class="ace-button-content">${iconSvg("bellOff")}<span>Mute</span></span>
+          <button type="button" class="ace-toggle-button ace-icon-only-button" data-action="toggle-mute" data-active="${state.options.muteExport}" aria-label="Mute export alerts" aria-pressed="${state.options.muteExport}" title="Mute export alerts">
+            ${iconSvg("bellOff")}
           </button>
-          <button type="button" data-action="settings" aria-expanded="${state.settingsOpen}">
-            <span class="ace-button-content">${iconSvg("settings")}<span>Settings</span></span>
+          <button type="button" class="ace-icon-only-button" data-action="settings" aria-label="Settings" aria-expanded="${state.settingsOpen}" title="Settings">
+            ${iconSvg("settings")}
           </button>
           <button type="button" class="ace-primary-button" data-action="export">
             <span class="ace-button-content">${iconSvg("download")}<span>Export</span></span>
@@ -575,9 +591,9 @@
         </section>
 
         <section class="ace-selection-toolbar">
-          <button type="button" data-action="refresh" title="Refresh detected messages"><span class="ace-button-content">${iconSvg("refresh")}<span>Refresh</span></span></button>
+          <button type="button" class="ace-icon-only-button" data-action="refresh" aria-label="Refresh detected messages" title="Refresh detected messages">${iconSvg("refresh")}</button>
           <button type="button" data-action="select-all" title="Alt+A"><span class="ace-button-content">${iconSvg("checkAll")}<span>All</span></span></button>
-          <button type="button" data-action="select-assistant" title="Alt+C"><span class="ace-button-content">${iconSvg("bot")}<span>${utils.escapeHtml(assistantLabel())}</span></span></button>
+          <button type="button" data-action="select-assistant" title="Alt+C"><span class="ace-button-content">${iconSvg("bot")}<span>${utils.escapeHtml(assistantShortLabel())}</span></span></button>
           <button type="button" data-action="select-user" title="Alt+Y"><span class="ace-button-content">${iconSvg("user")}<span>You</span></span></button>
           <button type="button" data-action="clear" title="Alt+N"><span class="ace-button-content">${iconSvg("xSquare")}<span>None</span></span></button>
         </section>
@@ -856,6 +872,7 @@
     button.type = "button";
     button.dataset.aceNativeLauncher = "true";
     button.dataset.theme = detectClaudeTheme();
+    button.dataset.provider = providerId();
     button.setAttribute("aria-label", "Export chat");
     button.setAttribute("title", "Export chat");
     button.removeAttribute("aria-expanded");
@@ -890,6 +907,7 @@
     button.type = "button";
     button.textContent = "Export";
     button.dataset.theme = detectClaudeTheme();
+    button.dataset.provider = providerId();
     button.dataset.aceFallbackLauncher = "true";
     button.addEventListener("click", openPanel);
     return button;

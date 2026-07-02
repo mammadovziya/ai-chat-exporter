@@ -111,10 +111,14 @@ assert(!/share\|export\|download\|copy link\|copy chat\|more\|options/.test(sour
 assert(/makeNativeLauncher/.test(sourceText), "Launcher should clone native button style");
 assert(/insertAdjacentElement\("afterend", launcher\)/.test(sourceText), "Launcher should sit next to Share");
 assert(/data-ace-native-launcher/.test(sourceText), "Native launcher should avoid floating fallback styles");
-assert(/width:\s*min\(340px/.test(sourceText), "Panel should stay compact so chat messages remain selectable");
-assert(/max-height:\s*min\(460px/.test(sourceText), "Panel should use compact height instead of full viewport height");
+assert(/width:\s*min\(304px/.test(sourceText), "Panel should stay compact so chat messages remain selectable");
+assert(/max-height:\s*min\(392px/.test(sourceText), "Panel should use compact height instead of full viewport height");
 assert(/ace-quick-export/.test(sourceText), "Panel should prioritize quick export over large settings");
 assert(/state\.settingsOpen/.test(sourceText), "Detailed settings should be collapsible");
+assert(/assistantShortLabel/.test(sourceText), "Compact toolbar should use short provider labels");
+assert(/data-provider/.test(sourceText), "Panel styles should use provider-aware native accents");
+assert(/data-provider="gemini"/.test(sourceText), "Gemini should get provider-specific native styling");
+assert(/ace-icon-only-button/.test(sourceText), "Secondary actions should stay compact with icon-only buttons");
 assert(/messageClickHandler/.test(sourceText), "Clicking the message itself should toggle selection");
 assert(/muteExport/.test(sourceText), "Exporter should include muted export alerts");
 assert(/iconSvg/.test(sourceText), "Exporter UI should use inline icons without remote assets");

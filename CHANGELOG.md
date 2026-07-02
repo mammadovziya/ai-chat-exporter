@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.3
+
+- Reworked the export panel into a smaller native-feeling command popover.
+- Added provider-specific accent styles for Claude, ChatGPT, Gemini, and Grok.
+- Switched secondary actions to compact icon buttons so Gemini and other narrow
+  top bars do not clip the export controls.
+
 ## 1.1.2
 
 - Anchored Gemini's Export button next to the native Upgrade pill.
