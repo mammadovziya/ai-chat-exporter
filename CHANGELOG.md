@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1
+
+- Restored strict native placement beside provider share/export controls.
+- Added provider-specific native anchor labels for Claude, ChatGPT, Gemini, and
+  Grok.
+- Removed broad "more/options" anchoring so the export button does not drift away
+  from the real share area.
+
 ## 1.1.0
 
 - Added one-extension support for Claude, ChatGPT, Gemini, and Grok.

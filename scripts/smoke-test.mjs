@@ -102,6 +102,10 @@ assert(/ace-chat-select-button/.test(sourceText), "Messages should be selectable
 assert(/handleKeyboardShortcuts/.test(sourceText), "Selection mode should include keyboard shortcuts");
 assert(/Alt\+A/.test(sourceText) && /Alt\+N/.test(sourceText), "Selection shortcuts should expose all and none actions");
 assert(/findShareButton/.test(sourceText), "Launcher should find native share/export buttons");
+assert(/nativeAnchorLabels/.test(sourceText), "Launcher should use provider-specific native anchor labels");
+assert(/isNativeShareAnchor/.test(sourceText), "Launcher should use strict native share anchors");
+assert(/aceIconOnlyLauncher/.test(sourceText), "Icon-only native share buttons should get icon-only export buttons");
+assert(!/share\|export\|download\|copy link\|copy chat\|more\|options/.test(sourceText), "Launcher should not anchor to broad more/options controls");
 assert(/makeNativeLauncher/.test(sourceText), "Launcher should clone native button style");
 assert(/insertAdjacentElement\("afterend", launcher\)/.test(sourceText), "Launcher should sit next to Share");
 assert(/data-ace-native-launcher/.test(sourceText), "Native launcher should avoid floating fallback styles");

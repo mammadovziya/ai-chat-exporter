@@ -771,7 +771,20 @@
     ].join(" ").replace(/\s+/g, " ").trim();
   }
 
-  function isShareButton(element) {
+  function nativeAnchorPattern() {
+    const labels = currentProvider().nativeAnchorLabels || ["share"];
+    const escaped = labels
+      .slice()
+      .sort((left, right) => right.length - left.length)
+      .map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    return new RegExp(`\\b(${escaped.join("|")})\\b`, "i");
+  }
+
+  function isInTopAppControls(element) {
+    return Boolean(element.closest("header, [role='banner'], [data-testid*='header' i], [class*='header' i], [class*='topbar' i], [class*='toolbar' i], [class*='conversation-header' i]"));
+  }
+
+  function isNativeShareAnchor(element) {
     if (!(element instanceof HTMLElement) || element.id === "ace-exporter-launcher") {
       return false;
     }
@@ -785,15 +798,15 @@
       return false;
     }
 
-    return /\b(share|export|download|copy link|copy chat|more|options)\b/i.test(label) && isVisibleElement(element);
+    return nativeAnchorPattern().test(label) && isVisibleElement(element);
   }
 
   function findShareButton() {
-    const candidates = Array.from(document.querySelectorAll("button, a[role='button']"))
-      .filter(isShareButton);
+    const candidates = Array.from(document.querySelectorAll("button, a[role='button'], [role='button']"))
+      .filter(isNativeShareAnchor);
 
-    return candidates.find((button) => /\bshare\b/i.test(buttonLabel(button)) && button.closest("header")) ||
-      candidates.find((button) => button.closest("header")) ||
+    return candidates.find((button) => /\bshare\b/i.test(buttonLabel(button)) && isInTopAppControls(button)) ||
+      candidates.find((button) => isInTopAppControls(button)) ||
       candidates.find((button) => /\bshare\b/i.test(buttonLabel(button))) ||
       candidates[0] ||
       null;
@@ -815,8 +828,26 @@
     return didReplace;
   }
 
+  function nativeIconElement(name) {
+    const template = document.createElement("template");
+    template.innerHTML = iconSvg(name).trim();
+    const svg = template.content.firstElementChild;
+    if (svg) {
+      svg.setAttribute("fill", "none");
+      svg.setAttribute("height", "16");
+      svg.setAttribute("stroke", "currentColor");
+      svg.setAttribute("stroke-linecap", "round");
+      svg.setAttribute("stroke-linejoin", "round");
+      svg.setAttribute("stroke-width", "2");
+      svg.setAttribute("width", "16");
+    }
+
+    return svg;
+  }
+
   function makeNativeLauncher(shareButton) {
     const button = shareButton.cloneNode(true);
+    const shareButtonHadVisibleText = Boolean(buttonLabel(shareButton).replace(button.getAttribute("aria-label") || "", "").replace(button.getAttribute("title") || "", "").trim());
     button.id = "ace-exporter-launcher";
     button.type = "button";
     button.dataset.aceNativeLauncher = "true";
@@ -830,8 +861,14 @@
     button.removeAttribute("href");
     button.setAttribute("role", "button");
 
-    if (!replaceTextNodes(button, /\b(share|download|copy link|copy chat|more|options)\b/gi, "Export")) {
-      button.textContent = "Export";
+    if (!replaceTextNodes(button, nativeAnchorPattern(), "Export")) {
+      const icon = shareButtonHadVisibleText ? null : nativeIconElement("download");
+      if (icon) {
+        button.replaceChildren(icon);
+        button.dataset.aceIconOnlyLauncher = "true";
+      } else {
+        button.textContent = "Export";
+      }
     }
 
     button.addEventListener("click", (event) => {

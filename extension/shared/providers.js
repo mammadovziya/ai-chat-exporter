@@ -8,6 +8,7 @@
       assistantLabel: "Claude",
       filenamePrefix: "claude-chat",
       hosts: ["claude.ai"],
+      nativeAnchorLabels: ["share"],
       productWords: ["claude", "anthropic"],
       transcriptMarkers: ["Claude responded", "Claude said"]
     },
@@ -17,6 +18,7 @@
       assistantLabel: "ChatGPT",
       filenamePrefix: "chatgpt-chat",
       hosts: ["chatgpt.com", "chat.openai.com"],
+      nativeAnchorLabels: ["share", "share chat", "share conversation"],
       productWords: ["chatgpt", "openai"],
       transcriptMarkers: ["ChatGPT said", "ChatGPT responded"]
     },
@@ -26,6 +28,7 @@
       assistantLabel: "Gemini",
       filenamePrefix: "gemini-chat",
       hosts: ["gemini.google.com"],
+      nativeAnchorLabels: ["share", "share and export", "share & export", "export"],
       productWords: ["gemini", "google"],
       transcriptMarkers: ["Gemini said", "Gemini responded"]
     },
@@ -35,6 +38,7 @@
       assistantLabel: "Grok",
       filenamePrefix: "grok-chat",
       hosts: ["grok.com"],
+      nativeAnchorLabels: ["share", "share chat", "share conversation"],
       productWords: ["grok", "xai", "x.ai"],
       transcriptMarkers: ["Grok said", "Grok responded"]
     }
