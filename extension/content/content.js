@@ -55,8 +55,10 @@
 
   let panel;
   let launcher;
+  let launcherAutoPlacementInstalled = false;
   let launcherObserver;
   let launcherPlacementTimer;
+  let launcherWatchdogTimer;
   let preferencesLoadPromise;
   let preferencesSaveTimer;
   let routeCheckTimer;
@@ -1140,6 +1142,16 @@
     return button;
   }
 
+  function launcherHost() {
+    return document.body || document.documentElement;
+  }
+
+  function showLauncherWhenIdle(button) {
+    if (button && (!panel || panel.hidden)) {
+      button.hidden = false;
+    }
+  }
+
   function placeLauncher() {
     if (!isSupportedPage()) {
       return;
@@ -1150,22 +1162,32 @@
 
     if (shareButton) {
       if (existing?.dataset.aceNativeLauncher === "true" && existing.previousElementSibling === shareButton) {
+        launcher = existing;
+        applyNativeTheme();
+        showLauncherWhenIdle(launcher);
         return;
       }
 
       existing?.remove();
       launcher = makeNativeLauncher(shareButton);
       shareButton.insertAdjacentElement("afterend", launcher);
+      showLauncherWhenIdle(launcher);
       return;
     }
 
     if (existing) {
       launcher = existing;
+      applyNativeTheme();
+      if (!launcher.parentElement && launcherHost()) {
+        launcherHost().appendChild(launcher);
+      }
+      showLauncherWhenIdle(launcher);
       return;
     }
 
     launcher = makeFallbackLauncher();
-    document.documentElement.appendChild(launcher);
+    launcherHost().appendChild(launcher);
+    showLauncherWhenIdle(launcher);
   }
 
   function scheduleLauncherPlacement(delay = 120) {
@@ -1176,10 +1198,25 @@
   }
 
   function installLauncherAutoPlacement() {
-    const retryDelays = [0, 250, 750, 1500, 3000, 6000];
+    if (launcherAutoPlacementInstalled) {
+      return;
+    }
+
+    launcherAutoPlacementInstalled = true;
+    const retryDelays = [0, 100, 250, 500, 1000, 2000, 4000, 8000, 15000];
     retryDelays.forEach((delay) => window.setTimeout(() => placeLauncher(), delay));
+    launcherWatchdogTimer = window.setInterval(() => {
+      if (!isSupportedPage()) {
+        window.clearInterval(launcherWatchdogTimer);
+        launcherWatchdogTimer = undefined;
+        return;
+      }
+
+      placeLauncher();
+    }, 2000);
     window.addEventListener("pageshow", () => scheduleLauncherPlacement(0));
     window.addEventListener("focus", () => scheduleLauncherPlacement(0));
+    window.addEventListener("pointerdown", () => scheduleLauncherPlacement(0), { capture: true });
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) {
         scheduleLauncherPlacement(0);

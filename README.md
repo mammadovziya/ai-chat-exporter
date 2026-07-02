@@ -53,6 +53,11 @@ The extension intentionally keeps permissions narrow:
 
 There is no `downloads`, `tabs`, or `<all_urls>` permission.
 
+For the Export button to appear automatically, browser site access must be
+allowed for the supported chat site. If Chrome or Firefox is set to run the
+extension only "on click", the button can appear only after clicking the
+extension icon because the browser has not allowed the content script to run yet.
+
 ## Install From Source
 
 Install dependencies are not required. You only need Node.js to build the

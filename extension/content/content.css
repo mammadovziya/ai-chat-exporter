@@ -129,6 +129,13 @@
   z-index: 2147483640;
 }
 
+#ace-exporter-launcher[data-ace-fallback-launcher="true"][data-provider="chatgpt"],
+#ace-exporter-launcher[data-ace-fallback-launcher="true"][data-provider="gemini"],
+#ace-exporter-launcher[data-ace-fallback-launcher="true"][data-provider="grok"] {
+  right: 16px;
+  top: 16px;
+}
+
 #ace-exporter-launcher[data-ace-native-launcher="true"] {
   cursor: pointer;
 }

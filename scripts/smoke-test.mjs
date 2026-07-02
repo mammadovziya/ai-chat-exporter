@@ -146,5 +146,8 @@ assert(!/PERSISTED_OPTION_KEYS\s*=\s*\[[^\]]*(filename|title)/.test(sourceText),
 assert(/loadStoredPreferences/.test(sourceText) && /saveStoredPreferences/.test(sourceText), "Exporter should remember the last selected format and settings");
 assert(/installLauncherAutoPlacement/.test(sourceText), "Launcher should auto-place on supported AI chat pages");
 assert(/pageshow/.test(sourceText) && /visibilitychange/.test(sourceText), "Launcher should retry placement as apps load and tabs regain focus");
+assert(/launcherWatchdogTimer/.test(sourceText), "Launcher should keep retrying on late-loading provider apps");
+assert(/pointerdown/.test(sourceText), "Launcher should self-heal after provider app interaction");
+assert(/launcherHost/.test(sourceText), "Fallback launcher should attach to the app body when available");
 
 console.log("Smoke tests passed");

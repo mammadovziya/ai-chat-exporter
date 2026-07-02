@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.9
+
+- Made automatic Export launcher placement self-healing on late-loading apps
+  like Grok, ChatGPT, and Gemini.
+- Attached fallback launchers to the page body when available and kept them
+  visible when the export panel is closed.
+- Added provider-specific fallback launcher positioning near the top-right app
+  controls.
+
 ## 1.1.8
 
 - Added provider-specific scrape fallbacks for ChatGPT, Gemini, and Grok.
