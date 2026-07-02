@@ -140,6 +140,121 @@
   cursor: pointer;
 }
 
+#ace-exporter-launcher[data-ace-labeled-launcher="true"] {
+  align-items: center !important;
+  display: inline-flex !important;
+  gap: 7px !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+}
+
+#ace-exporter-launcher[data-ace-labeled-launcher="true"] svg {
+  fill: none !important;
+  flex: 0 0 auto !important;
+  height: 16px !important;
+  stroke: currentColor !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  stroke-width: 2 !important;
+  width: 16px !important;
+}
+
+#ace-exporter-launcher[data-ace-labeled-launcher="true"] span {
+  line-height: 1 !important;
+}
+
+#ace-exporter-launcher[data-provider="chatgpt"][data-ace-native-launcher="true"],
+#ace-exporter-launcher[data-provider="chatgpt"][data-ace-fallback-launcher="true"] {
+  background: #ffffff !important;
+  border: 1px solid rgba(13, 13, 13, 0.12) !important;
+  border-radius: 9999px !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  color: #0d0d0d !important;
+  font: 500 14px/20px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  height: 36px !important;
+  letter-spacing: 0 !important;
+  min-height: 36px !important;
+  min-width: 0 !important;
+  padding: 0 13px !important;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease !important;
+  width: auto !important;
+}
+
+#ace-exporter-launcher[data-provider="chatgpt"][data-ace-native-launcher="true"] {
+  margin-left: 8px !important;
+}
+
+#ace-exporter-launcher[data-provider="chatgpt"][data-ace-fallback-launcher="true"] {
+  right: 16px;
+  top: 12px;
+}
+
+#ace-exporter-launcher[data-provider="chatgpt"][data-ace-native-launcher="true"]:hover,
+#ace-exporter-launcher[data-provider="chatgpt"][data-ace-fallback-launcher="true"]:hover {
+  background: #f1f1f1 !important;
+  border-color: rgba(13, 13, 13, 0.18) !important;
+}
+
+#ace-exporter-launcher[data-theme="dark"][data-provider="chatgpt"][data-ace-native-launcher="true"],
+#ace-exporter-launcher[data-theme="dark"][data-provider="chatgpt"][data-ace-fallback-launcher="true"] {
+  background: #2f2f2f !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #f4f4f4 !important;
+}
+
+#ace-exporter-launcher[data-theme="dark"][data-provider="chatgpt"][data-ace-native-launcher="true"]:hover,
+#ace-exporter-launcher[data-theme="dark"][data-provider="chatgpt"][data-ace-fallback-launcher="true"]:hover {
+  background: #3a3a3a !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+#ace-exporter-launcher[data-provider="gemini"][data-ace-native-launcher="true"],
+#ace-exporter-launcher[data-provider="gemini"][data-ace-fallback-launcher="true"] {
+  background: #0b57d0 !important;
+  border: 1px solid #0b57d0 !important;
+  border-radius: 9999px !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  color: #ffffff !important;
+  font: 500 14px/20px "Google Sans", Roboto, Arial, sans-serif !important;
+  height: 40px !important;
+  letter-spacing: 0 !important;
+  min-height: 40px !important;
+  min-width: 0 !important;
+  padding: 0 15px !important;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease !important;
+  width: auto !important;
+}
+
+#ace-exporter-launcher[data-provider="gemini"][data-ace-native-launcher="true"] {
+  margin-left: 10px !important;
+}
+
+#ace-exporter-launcher[data-provider="gemini"][data-ace-fallback-launcher="true"] {
+  right: 18px;
+  top: 18px;
+}
+
+#ace-exporter-launcher[data-provider="gemini"][data-ace-native-launcher="true"]:hover,
+#ace-exporter-launcher[data-provider="gemini"][data-ace-fallback-launcher="true"]:hover {
+  background: #0842a0 !important;
+  border-color: #0842a0 !important;
+}
+
+#ace-exporter-launcher[data-theme="dark"][data-provider="gemini"][data-ace-native-launcher="true"],
+#ace-exporter-launcher[data-theme="dark"][data-provider="gemini"][data-ace-fallback-launcher="true"] {
+  background: #0b57d0 !important;
+  border-color: #0b57d0 !important;
+  color: #ffffff !important;
+}
+
+#ace-exporter-launcher[data-theme="dark"][data-provider="gemini"][data-ace-native-launcher="true"]:hover,
+#ace-exporter-launcher[data-theme="dark"][data-provider="gemini"][data-ace-fallback-launcher="true"]:hover {
+  background: #1a73e8 !important;
+  border-color: #1a73e8 !important;
+}
+
 #ace-exporter-launcher[data-ace-fallback-launcher="true"]:hover {
   background: var(--ace-native-hover);
 }

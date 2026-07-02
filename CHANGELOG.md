@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.10
+
+- Changed ChatGPT/OpenAI and Gemini launcher buttons to always show a download
+  icon plus a readable Export label.
+- Added provider-specific compact launcher styling: a quiet OpenAI-style pill
+  for ChatGPT and a Gemini-blue top-bar pill for Gemini.
+- Kept the native clone behavior while making fallback launchers look
+  intentional on both platforms.
+
 ## 1.1.9
 
 - Made automatic Export launcher placement self-healing on late-loading apps

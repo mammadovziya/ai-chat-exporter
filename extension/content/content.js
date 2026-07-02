@@ -1089,6 +1089,26 @@
     return svg;
   }
 
+  function useLabeledProviderLauncher(button) {
+    if (!["chatgpt", "gemini"].includes(providerId())) {
+      return false;
+    }
+
+    const icon = nativeIconElement("download");
+    const label = document.createElement("span");
+    label.textContent = "Export";
+
+    if (icon) {
+      button.replaceChildren(icon, label);
+    } else {
+      button.textContent = "Export";
+    }
+
+    button.dataset.aceLabeledLauncher = "true";
+    delete button.dataset.aceIconOnlyLauncher;
+    return true;
+  }
+
   function makeNativeLauncher(shareButton) {
     const button = shareButton.cloneNode(true);
     const shareButtonHadVisibleText = Boolean((shareButton.textContent || "").replace(/\s+/g, " ").trim());
@@ -1111,7 +1131,7 @@
     button.setAttribute("role", "button");
     button.tabIndex = 0;
 
-    if (!replaceTextNodes(button, nativeAnchorPattern(), "Export")) {
+    if (!useLabeledProviderLauncher(button) && !replaceTextNodes(button, nativeAnchorPattern(), "Export")) {
       const icon = shareButtonHadVisibleText ? null : nativeIconElement("download");
       if (icon) {
         button.replaceChildren(icon);
@@ -1138,6 +1158,7 @@
     button.dataset.theme = detectClaudeTheme();
     button.dataset.provider = providerId();
     button.dataset.aceFallbackLauncher = "true";
+    useLabeledProviderLauncher(button);
     button.addEventListener("click", openPanel);
     return button;
   }

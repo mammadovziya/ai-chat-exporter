@@ -149,5 +149,8 @@ assert(/pageshow/.test(sourceText) && /visibilitychange/.test(sourceText), "Laun
 assert(/launcherWatchdogTimer/.test(sourceText), "Launcher should keep retrying on late-loading provider apps");
 assert(/pointerdown/.test(sourceText), "Launcher should self-heal after provider app interaction");
 assert(/launcherHost/.test(sourceText), "Fallback launcher should attach to the app body when available");
+assert(/aceLabeledLauncher/.test(sourceText), "OpenAI and Gemini launchers should keep visible Export labels");
+assert(/data-provider="chatgpt"\]\[data-ace-native-launcher="true"\]/.test(sourceText), "ChatGPT should get native launcher styling");
+assert(/data-provider="gemini"\]\[data-ace-native-launcher="true"\]/.test(sourceText), "Gemini should get native launcher styling");
 
 console.log("Smoke tests passed");
