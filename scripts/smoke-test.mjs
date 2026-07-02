@@ -74,6 +74,9 @@ assert(!/printWindow\.document/.test(sourceText), "PDF export should not access 
 assert(/annotation\[encoding\*='tex' i\]/.test(sourceText), "Scraper should preserve TeX annotations for math");
 assert(/ace-math-inline/.test(sourceText), "HTML export should preserve inline math");
 assert(/ace-math-block/.test(sourceText), "HTML export should preserve block math");
+assert(/highlightCode/.test(sourceText), "Exporter should syntax-highlight code blocks locally");
+assert(/ace-token-keyword/.test(sourceText), "Export CSS should include syntax highlighting token styles");
+assert(/detectCodeLanguage/.test(sourceText), "Exporter should infer common code block languages");
 assert(/Message actions/.test(sourceText), "Scraper should use Claude message action bars as a role fallback");
 assert(/Give positive feedback/.test(sourceText), "Scraper should distinguish Claude responses from feedback controls");
 assert(/collectActionGroupEntries/.test(sourceText), "Scraper should use message action groups as fallback entries");

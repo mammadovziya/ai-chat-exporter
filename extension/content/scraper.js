@@ -480,8 +480,10 @@
 
     if (tag === "code" || tag === "pre") {
       const languageClass = Array.from(element.classList).find((item) => /^language-[\w-]+$/.test(item));
-      if (languageClass) {
-        attrs.push(`class="${languageClass}"`);
+      const language = utils.normalizeCodeLanguage(languageClass) ||
+        (tag === "pre" || element.closest("pre") ? utils.detectCodeLanguage(element.textContent) : "");
+      if (language) {
+        attrs.push(`class="language-${utils.escapeHtml(language)}"`);
       }
     }
 
@@ -540,7 +542,7 @@
   function languageFromCodeBlock(element) {
     const code = element.matches("code") ? element : element.querySelector("code");
     const languageClass = code ? Array.from(code.classList).find((item) => /^language-[\w-]+$/.test(item)) : "";
-    return languageClass ? languageClass.replace(/^language-/, "") : "";
+    return utils.normalizeCodeLanguage(languageClass) || utils.detectCodeLanguage(element.textContent);
   }
 
   function markdownText(value) {

@@ -1,6 +1,6 @@
 {
   "name": "ai-chat-exporter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "A privacy-first browser extension for exporting Claude chats to PDF, Markdown, Text, JSON, CSV, and PNG.",

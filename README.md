@@ -12,8 +12,9 @@ to PDF, Markdown, Text, JSON, CSV, and PNG.
   boxes.
 - Use quick selection controls for all messages, Claude messages, your
   messages, or none.
-- Preserve common advanced outputs including code blocks, tables, lists,
-  headings, inline math, block math, and structured Claude formatting.
+- Preserve common advanced outputs including block and inline math,
+  syntax-highlighted code blocks, tables, lists, headings, and structured
+  Claude formatting.
 - Customize filename, document title, PDF paper size, PDF theme, and page
   numbers.
 - Mute export alerts when you want silent local downloads.

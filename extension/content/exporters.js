@@ -30,6 +30,51 @@
     return role === "assistant" ? "Claude" : "User";
   }
 
+  function languageFromClassList(element) {
+    const languageClass = element ? Array.from(element.classList).find((item) => /^language-[\w-]+$/.test(item)) : "";
+    return utils.normalizeCodeLanguage(languageClass);
+  }
+
+  function highlightedCodeElement(codeText, language) {
+    const code = document.createElement("code");
+    const normalizedLanguage = utils.normalizeCodeLanguage(language) || utils.detectCodeLanguage(codeText);
+    code.className = ["ace-highlighted-code", normalizedLanguage ? `language-${normalizedLanguage}` : ""].filter(Boolean).join(" ");
+    code.innerHTML = utils.highlightCode(codeText, normalizedLanguage);
+    return { code, language: normalizedLanguage };
+  }
+
+  function enhanceCodeBlocks(html) {
+    const template = document.createElement("template");
+    template.innerHTML = html || "";
+
+    template.content.querySelectorAll("pre").forEach((pre) => {
+      const originalCode = pre.querySelector("code");
+      const codeText = (originalCode || pre).textContent || "";
+      if (!codeText.trim()) {
+        return;
+      }
+
+      const language = languageFromClassList(originalCode) || languageFromClassList(pre) || utils.detectCodeLanguage(codeText);
+      const highlighted = highlightedCodeElement(codeText.replace(/\n+$/g, ""), language);
+      pre.classList.add("ace-code-block");
+      if (highlighted.language) {
+        pre.dataset.language = utils.codeLanguageLabel(highlighted.language);
+      }
+      pre.replaceChildren(highlighted.code);
+    });
+
+    template.content.querySelectorAll(":not(pre) > code").forEach((code) => {
+      const text = code.textContent || "";
+      code.innerHTML = utils.escapeHtml(text);
+    });
+
+    return template.innerHTML;
+  }
+
+  function messageHtml(message) {
+    return enhanceCodeBlocks(message.html || `<p>${utils.escapeHtml(message.text)}</p>`);
+  }
+
   function toMarkdown(messages, options) {
     const metadata = exportMetadata(messages, options);
     const parts = [
@@ -116,6 +161,13 @@
         --ace-border: ${isDark ? "#343842" : "#d9d7cf"};
         --ace-accent: ${isDark ? "#7cc7b2" : "#0f766e"};
         --ace-code-bg: ${isDark ? "#0b0c0f" : "#efeee8"};
+        --ace-token-attr: ${isDark ? "#d8b4fe" : "#7c3aed"};
+        --ace-token-comment: ${isDark ? "#8a9387" : "#6a737d"};
+        --ace-token-keyword: ${isDark ? "#ff9c8a" : "#c2410c"};
+        --ace-token-number: ${isDark ? "#f7c873" : "#a16207"};
+        --ace-token-punctuation: ${isDark ? "#aab2bf" : "#586069"};
+        --ace-token-string: ${isDark ? "#a7d88d" : "#047857"};
+        --ace-token-tag: ${isDark ? "#7cc7f2" : "#0369a1"};
       }
 
       * {
@@ -203,15 +255,71 @@
         background: var(--ace-code-bg);
         border: 1px solid var(--ace-border);
         border-radius: 8px;
+        color: var(--ace-text);
+        line-height: 1.55;
+        margin: 12px 0;
         overflow: auto;
         padding: 12px;
+        position: relative;
+        tab-size: 2;
         white-space: pre-wrap;
+      }
+
+      pre[data-language] {
+        padding-top: 34px;
+      }
+
+      pre[data-language]::before {
+        background: var(--ace-surface);
+        border-bottom: 1px solid var(--ace-border);
+        border-left: 1px solid var(--ace-border);
+        border-bottom-left-radius: 7px;
+        color: var(--ace-muted);
+        content: attr(data-language);
+        font: 700 10px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+        letter-spacing: 0.04em;
+        padding: 6px 8px;
+        position: absolute;
+        right: 0;
+        text-transform: uppercase;
+        top: 0;
       }
 
       :not(pre) > code {
         background: var(--ace-code-bg);
         border-radius: 4px;
         padding: 1px 4px;
+      }
+
+      .ace-token-attr {
+        color: var(--ace-token-attr);
+      }
+
+      .ace-token-comment {
+        color: var(--ace-token-comment);
+        font-style: italic;
+      }
+
+      .ace-token-keyword {
+        color: var(--ace-token-keyword);
+        font-weight: 700;
+      }
+
+      .ace-token-number {
+        color: var(--ace-token-number);
+      }
+
+      .ace-token-punctuation {
+        color: var(--ace-token-punctuation);
+      }
+
+      .ace-token-string {
+        color: var(--ace-token-string);
+      }
+
+      .ace-token-tag {
+        color: var(--ace-token-tag);
+        font-weight: 700;
       }
 
       table {
@@ -294,7 +402,7 @@
           <span>#${message.index + 1}</span>
         </header>
         <div class="ace-export-message-body">
-          ${message.html || `<p>${utils.escapeHtml(message.text)}</p>`}
+          ${messageHtml(message)}
         </div>
       </article>
     `).join("");
