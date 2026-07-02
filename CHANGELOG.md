@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.13
+
+- Strengthened Gemini scraping by preferring `user-query`,
+  `model-response`, query content, and response content selector groups.
+- Made provider scraping accept short visible prompts/responses instead of
+  rejecting them with the generic wide-message heuristic.
+- Anchored Gemini selection controls to visible query and response content.
+
 ## 1.1.12
 
 - Added popup-based content script wake-up for Firefox when supported chat

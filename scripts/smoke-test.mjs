@@ -158,5 +158,7 @@ assert(/messageSelectableElement/.test(sourceText), "Selection state should atta
 assert(/USER_MESSAGE_ANCHOR_SELECTOR/.test(sourceText) && /ASSISTANT_MESSAGE_ANCHOR_SELECTOR/.test(sourceText), "Selection anchors should be role-aware");
 assert(/wakeContentScript/.test(sourceText) && /api\.scripting\.executeScript/.test(sourceText), "Popup should wake the exporter when content scripts are missing");
 assert(/share this chat/.test(sourceText) && /copy link/.test(sourceText), "Grok launcher should recognize current share labels");
+assert(/query-content/.test(sourceText) && /query-container/.test(sourceText), "Gemini user queries should use current query selectors");
+assert(/isProviderCandidate/.test(sourceText), "Provider scraping should keep short visible messages");
 
 console.log("Smoke tests passed");

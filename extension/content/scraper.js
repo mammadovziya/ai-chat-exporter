@@ -25,15 +25,21 @@
     ].join(","),
     gemini: [
       "user-query",
+      "user-query .query-text",
+      "user-query .query-content",
       "model-response",
       "message-content",
       "response-container",
+      "[data-test-id*='query' i]",
       "[data-test-id*='user-query' i]",
       "[data-testid*='user-query' i]",
       "[data-test-id*='model-response' i]",
       "[data-testid*='model-response' i]",
       "[class*='user-query' i]",
+      "[class*='query-content' i]",
       "[class*='query-text' i]",
+      "[class*='query-container' i]",
+      "[class*='response-content' i]",
       "[class*='model-response' i]",
       "[class*='response-container' i]"
     ].join(","),
@@ -76,7 +82,33 @@
       ].join(",")
     ],
     gemini: [
-      PROVIDER_MESSAGE_SELECTORS.gemini
+      [
+        "user-query",
+        "model-response",
+        "[data-test-id*='user-query' i]",
+        "[data-testid*='user-query' i]",
+        "[data-test-id*='model-response' i]",
+        "[data-testid*='model-response' i]"
+      ].join(","),
+      [
+        "user-query .query-text",
+        "user-query .query-content",
+        "model-response message-content",
+        "message-content",
+        "response-container",
+        "[class*='query-content' i]",
+        "[class*='query-text' i]",
+        "[class*='query-container' i]",
+        "[class*='response-content' i]",
+        "[class*='response-container' i]",
+        "[class*='model-response' i]"
+      ].join(","),
+      [
+        "[data-test-id*='query' i]",
+        "[data-testid*='message' i]",
+        "[data-testid*='response' i]",
+        "article"
+      ].join(",")
     ],
     grok: [
       [
@@ -122,8 +154,11 @@
     ".font-user-message",
     "user-query",
     "user-query .query-text",
+    "user-query .query-content",
     "[class*='font-user-message']",
+    "[class*='query-content' i]",
     "[class*='query-text' i]",
+    "[class*='query-container' i]",
     "[data-testid='user-message']",
     "[data-testid*='user-message' i]",
     "[data-message-author-role='user']",
@@ -141,10 +176,12 @@
     ".prose",
     "model-response",
     "model-response message-content",
+    "message-content",
     "response-container",
     ".model-response-text",
     "[class*='font-claude-message']",
     "[class*='prose' i]",
+    "[class*='message-content' i]",
     "[class*='response-content' i]",
     "[class*='response-container' i]",
     "[class*='model-response' i]",
@@ -400,7 +437,7 @@
   }
 
   function getConversationRoot() {
-    if (["chatgpt", "grok"].includes(currentProviderId())) {
+    if (["chatgpt", "gemini", "grok"].includes(currentProviderId())) {
       return document.querySelector("main") || document.body;
     }
 
@@ -449,6 +486,20 @@
 
     const rect = element.getBoundingClientRect();
     return rect.width >= 120 || text.length >= 80;
+  }
+
+  function isProviderCandidate(element) {
+    if (!(element instanceof Element) || isInsideChrome(element) || !isVisible(element)) {
+      return false;
+    }
+
+    const text = cleanNodeText(element);
+    if (text.length < 2 || isDateOnlyText(text)) {
+      return false;
+    }
+
+    const rect = element.getBoundingClientRect();
+    return rect.width >= 24 && rect.height >= 12;
   }
 
   function removeNestedCandidates(nodes) {
@@ -511,11 +562,11 @@
       element.querySelector("model-response") ? "assistant" : ""
     ].join(" ").toLowerCase();
 
-    if (/\b(user|human)\b/.test(roleAttributes) || /\b(font-user-message|user-message|user-query|query-text|you said|human-message)\b/.test(signature)) {
+    if (/\b(user|human)\b/.test(roleAttributes) || /\b(font-user-message|user-message|user-query|query-content|query-text|query-container|you said|human-message)\b/.test(signature)) {
       return "user";
     }
 
-    if (/\b(assistant|model|bot)\b/.test(roleAttributes) || /\b(font-claude-message|assistant-message|model-response|response-content|bot-message|markdown|prose)\b/.test(signature) || providerPattern.test(signature)) {
+    if (/\b(assistant|model|bot)\b/.test(roleAttributes) || /\b(font-claude-message|assistant-message|model-response|message-content|response-content|bot-message|markdown|prose)\b/.test(signature) || providerPattern.test(signature)) {
       return "assistant";
     }
 
@@ -944,7 +995,7 @@
     let candidates = [];
     for (const selector of selectors) {
       candidates = removeNestedCandidates(Array.from(root.querySelectorAll(selector))
-        .filter((element) => isCandidate(element) && !isDateOnlyText(cleanNodeText(element))));
+        .filter(isProviderCandidate));
 
       if (candidates.length > 1) {
         break;
