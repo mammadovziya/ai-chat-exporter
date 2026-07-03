@@ -164,11 +164,15 @@
         --ace-code-bg: ${isDark ? "#0b0c0f" : "#efeee8"};
         --ace-token-attr: ${isDark ? "#d8b4fe" : "#7c3aed"};
         --ace-token-comment: ${isDark ? "#8a9387" : "#6a737d"};
+        --ace-token-function: ${isDark ? "#82d8ff" : "#0369a1"};
         --ace-token-keyword: ${isDark ? "#ff9c8a" : "#c2410c"};
         --ace-token-number: ${isDark ? "#f7c873" : "#a16207"};
+        --ace-token-operator: ${isDark ? "#f0a6ca" : "#be185d"};
+        --ace-token-property: ${isDark ? "#c4b5fd" : "#6d28d9"};
         --ace-token-punctuation: ${isDark ? "#aab2bf" : "#586069"};
         --ace-token-string: ${isDark ? "#a7d88d" : "#047857"};
         --ace-token-tag: ${isDark ? "#7cc7f2" : "#0369a1"};
+        --ace-token-variable: ${isDark ? "#f8d66d" : "#b45309"};
       }
 
       * {
@@ -301,6 +305,10 @@
         font-style: italic;
       }
 
+      .ace-token-function {
+        color: var(--ace-token-function);
+      }
+
       .ace-token-keyword {
         color: var(--ace-token-keyword);
         font-weight: 700;
@@ -308,6 +316,14 @@
 
       .ace-token-number {
         color: var(--ace-token-number);
+      }
+
+      .ace-token-operator {
+        color: var(--ace-token-operator);
+      }
+
+      .ace-token-property {
+        color: var(--ace-token-property);
       }
 
       .ace-token-punctuation {
@@ -321,6 +337,10 @@
       .ace-token-tag {
         color: var(--ace-token-tag);
         font-weight: 700;
+      }
+
+      .ace-token-variable {
+        color: var(--ace-token-variable);
       }
 
       table {

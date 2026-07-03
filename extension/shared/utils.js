@@ -5,15 +5,20 @@
   const CODE_LANGUAGE_ALIASES = {
     "c#": "csharp",
     "c++": "cpp",
+    "console": "bash",
+    "dockerfile": "dockerfile",
     "js": "javascript",
+    "mjs": "javascript",
     "md": "markdown",
     "ps": "powershell",
     "ps1": "powershell",
+    "pwsh": "powershell",
     "py": "python",
     "rb": "ruby",
     "rs": "rust",
     "shell": "bash",
     "sh": "bash",
+    "tsx": "tsx",
     "ts": "typescript",
     "yml": "yaml"
   };
@@ -23,6 +28,7 @@
     cpp: "C++",
     csharp: "C#",
     css: "CSS",
+    dockerfile: "Dockerfile",
     go: "Go",
     html: "HTML",
     java: "Java",
@@ -46,7 +52,8 @@
     c: ["break", "case", "const", "continue", "default", "do", "else", "enum", "for", "if", "include", "int", "long", "return", "sizeof", "static", "struct", "switch", "typedef", "void", "while"],
     cpp: ["auto", "break", "case", "class", "const", "continue", "default", "delete", "do", "else", "enum", "for", "if", "include", "namespace", "new", "private", "protected", "public", "return", "static", "struct", "switch", "template", "typename", "using", "virtual", "void", "while"],
     csharp: ["async", "await", "break", "case", "class", "const", "continue", "default", "else", "for", "if", "interface", "namespace", "new", "private", "protected", "public", "return", "static", "string", "switch", "using", "var", "void", "while"],
-    css: ["align-items", "background", "border", "color", "display", "flex", "font", "gap", "grid", "height", "margin", "padding", "position", "width"],
+    css: ["align-items", "animation", "background", "border", "box-shadow", "color", "display", "flex", "font", "gap", "grid", "height", "justify-content", "margin", "padding", "position", "transform", "transition", "width"],
+    dockerfile: ["add", "arg", "cmd", "copy", "entrypoint", "env", "expose", "from", "healthcheck", "label", "maintainer", "onbuild", "run", "shell", "stopsignal", "user", "volume", "workdir"],
     go: ["break", "case", "chan", "const", "continue", "defer", "else", "for", "func", "go", "if", "import", "interface", "map", "package", "range", "return", "select", "struct", "switch", "type", "var"],
     java: ["abstract", "break", "case", "catch", "class", "const", "continue", "else", "extends", "final", "finally", "for", "if", "implements", "import", "interface", "new", "private", "protected", "public", "return", "static", "switch", "this", "throw", "try", "void", "while"],
     javascript: ["async", "await", "break", "case", "catch", "class", "const", "continue", "default", "else", "export", "extends", "finally", "for", "from", "function", "if", "import", "let", "new", "return", "switch", "this", "throw", "try", "var", "while", "yield"],
@@ -59,6 +66,11 @@
     sql: ["alter", "and", "as", "by", "case", "create", "delete", "desc", "distinct", "drop", "else", "from", "group", "having", "insert", "into", "join", "left", "limit", "not", "null", "on", "or", "order", "right", "select", "set", "table", "then", "union", "update", "values", "when", "where"],
     typescript: ["abstract", "as", "async", "await", "break", "case", "catch", "class", "const", "continue", "default", "else", "enum", "export", "extends", "finally", "for", "from", "function", "if", "implements", "import", "interface", "let", "new", "private", "protected", "public", "readonly", "return", "switch", "this", "throw", "try", "type", "var", "while", "yield"],
     yaml: ["false", "null", "true"]
+  };
+  const LANGUAGE_KEYWORD_FALLBACKS = {
+    jsx: "javascript",
+    tsx: "typescript",
+    xml: "html"
   };
 
   function escapeHtml(value) {
@@ -188,6 +200,9 @@
     if (/^\s*<(!doctype|html|[a-z][\w:-]*(\s|>|\/>))/i.test(code)) {
       return "html";
     }
+    if (/^\s*from\s+[\w./:-]+/im.test(code) && /\b(run|copy|cmd|entrypoint|workdir|env)\b/i.test(code)) {
+      return "dockerfile";
+    }
     if (/\b(select|insert|update|delete|create|alter|drop)\b[\s\S]+\b(from|into|table|where|values)\b/i.test(code)) {
       return "sql";
     }
@@ -195,6 +210,9 @@
       return "python";
     }
     if (/\b(function|const|let|var|import|export|async|await)\b/.test(code) || /=>/.test(code)) {
+      if (/<[A-Z][\w.]*[\s>]/.test(code) || /<\/[A-Z][\w.]*>/.test(code)) {
+        return /\binterface\b|:\s*(string|number|boolean)\b/.test(code) ? "tsx" : "jsx";
+      }
       return /\binterface\b|:\s*(string|number|boolean)\b/.test(code) ? "typescript" : "javascript";
     }
     if (/\b(Get-|Set-|New-|Remove-|Write-|Param\s*\(|foreach\s*\()/i.test(code)) {
@@ -245,8 +263,8 @@
 
   function highlightMarkupAttributes(value) {
     const escaped = escapeHtml(value);
-    return escaped.replace(/([A-Za-z_:][\w:.-]*)(=)(&quot;.*?&quot;|&#039;.*?&#039;)/g, (_, name, equals, quoted) => {
-      return `<span class="ace-token-attr">${name}</span><span class="ace-token-punctuation">${equals}</span><span class="ace-token-string">${quoted}</span>`;
+    return escaped.replace(/([A-Za-z_:][\w:.-]*)(=)(&quot;.*?&quot;|&#039;.*?&#039;|[^\s"'=<>`]+)/g, (_, name, equals, quoted) => {
+      return `${spanToken("attr", name)}${spanToken("operator", equals)}${spanToken("string", quoted)}`;
     });
   }
 
@@ -263,6 +281,61 @@
     return "\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/";
   }
 
+  function keywordLanguage(language) {
+    return LANGUAGE_KEYWORD_FALLBACKS[language] || language;
+  }
+
+  function tokenRulesForLanguage(language, keywordPattern) {
+    const commentPattern = commentPatternForLanguage(language);
+    const rules = [
+      { type: "comment", pattern: commentPattern }
+    ];
+
+    if (["json", "yaml", "css"].includes(language)) {
+      rules.push({ type: "attr", pattern: "\"(?:\\\\.|[^\"\\\\])*\"(?=\\s*:)" });
+      rules.push({ type: "attr", pattern: "'(?:\\\\.|[^'\\\\])*'(?=\\s*:)" });
+      rules.push({ type: "attr", pattern: "\\b[A-Za-z_][\\w.-]*(?=\\s*:)" });
+    }
+
+    rules.push(
+      { type: "string", pattern: "`(?:\\\\[\\s\\S]|[^`\\\\])*`" },
+      { type: "string", pattern: "\"(?:\\\\.|[^\"\\\\])*\"" },
+      { type: "string", pattern: "'(?:\\\\.|[^'\\\\])*'" }
+    );
+
+    if (language === "powershell") {
+      rules.push({ type: "variable", pattern: "\\$[A-Za-z_][\\w:.-]*" });
+    } else if (["bash", "dockerfile", "php"].includes(language)) {
+      rules.push({ type: "variable", pattern: "\\$[A-Za-z_][\\w.-]*|\\$\\{[^}\\n]+\\}" });
+    }
+
+    if (["javascript", "typescript", "jsx", "tsx", "python", "ruby", "php"].includes(language)) {
+      rules.push({ type: "attr", pattern: "@[A-Za-z_][\\w.]*" });
+    }
+
+    rules.push(
+      { type: "number", pattern: "#[\\da-f]{3,8}\\b" },
+      { type: "number", pattern: "\\b\\d+(?:\\.\\d+)?(?:px|rem|em|vh|vw|vmin|vmax|fr|ms|s|deg|%|pt)?\\b" },
+      { type: "number", pattern: "\\b(?:0x[\\da-f]+|0b[01]+|\\d+(?:\\.\\d+)?(?:e[+-]?\\d+)?)\\b" },
+      { type: "keyword", pattern: keywordPattern },
+      { type: "function", pattern: "\\b[A-Za-z_$][\\w$-]*(?=\\s*\\()" },
+      { type: "function", pattern: "\\.[A-Za-z_$][\\w$-]*(?=\\s*\\()" },
+      { type: "property", pattern: "\\.[A-Za-z_$][\\w$-]*" },
+      { type: "operator", pattern: "=>|->|::|\\.\\.\\.|[+\\-*%=&|!<>^~?:]+" },
+      { type: "punctuation", pattern: "[{}[\\]();,]" }
+    );
+
+    return rules;
+  }
+
+  function renderToken(type, value) {
+    if ((type === "function" || type === "property") && value.startsWith(".")) {
+      return `${spanToken("punctuation", ".")}${spanToken(type, value.slice(1))}`;
+    }
+
+    return spanToken(type, value);
+  }
+
   function highlightCode(value, languageHint = "") {
     const code = String(value ?? "");
     const language = normalizeCodeLanguage(languageHint) || detectCodeLanguage(code);
@@ -270,16 +343,10 @@
       return highlightMarkupCode(code);
     }
 
-    const keywords = CODE_KEYWORDS[language] || [];
+    const keywords = CODE_KEYWORDS[keywordLanguage(language)] || [];
     const keywordPattern = keywords.length ? `\\b(?:${keywords.map(escapeRegExp).join("|")})\\b` : "(?!)";
-    const tokenPattern = new RegExp([
-      commentPatternForLanguage(language),
-      "`(?:\\\\[\\s\\S]|[^`\\\\])*`",
-      "\"(?:\\\\.|[^\"\\\\])*\"",
-      "'(?:\\\\.|[^'\\\\])*'",
-      "\\b(?:0x[\\da-f]+|\\d+(?:\\.\\d+)?)\\b",
-      keywordPattern
-    ].join("|"), "gi");
+    const tokenRules = tokenRulesForLanguage(language, keywordPattern);
+    const tokenPattern = new RegExp(tokenRules.map((rule) => `(${rule.pattern})`).join("|"), "gi");
     let output = "";
     let lastIndex = 0;
     let match;
@@ -287,16 +354,8 @@
     while ((match = tokenPattern.exec(code))) {
       const token = match[0];
       output += escapeHtml(code.slice(lastIndex, match.index));
-
-      if (/^(?:\/\/|\/\*|#|--)/.test(token)) {
-        output += spanToken("comment", token);
-      } else if (/^(?:"|'|`)/.test(token)) {
-        output += spanToken("string", token);
-      } else if (/^(?:0x[\da-f]+|\d)/i.test(token)) {
-        output += spanToken("number", token);
-      } else {
-        output += spanToken("keyword", token);
-      }
+      const matchedRule = tokenRules.find((rule, index) => match[index + 1] !== undefined);
+      output += renderToken(matchedRule?.type || "punctuation", token);
 
       lastIndex = tokenPattern.lastIndex;
     }

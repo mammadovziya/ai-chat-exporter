@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.14
+
+- Improved local syntax highlighting with functions, properties, variables,
+  operators, punctuation, JSON/YAML/CSS keys, and Dockerfile detection.
+- Added JSX/TSX language detection and keyword fallback highlighting.
+- Rewrote the README from the beginning with clearer install, privacy, usage,
+  troubleshooting, and development sections.
+
 ## 1.1.13
 
 - Strengthened Gemini scraping by preferring `user-query`,

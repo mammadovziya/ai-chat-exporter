@@ -90,7 +90,13 @@ assert(/ace-math-inline/.test(sourceText), "HTML export should preserve inline m
 assert(/ace-math-block/.test(sourceText), "HTML export should preserve block math");
 assert(/highlightCode/.test(sourceText), "Exporter should syntax-highlight code blocks locally");
 assert(/ace-token-keyword/.test(sourceText), "Export CSS should include syntax highlighting token styles");
+assert(/ace-token-function/.test(sourceText), "Export CSS should include function token styles");
+assert(/ace-token-operator/.test(sourceText), "Export CSS should include operator token styles");
+assert(/ace-token-property/.test(sourceText), "Export CSS should include property token styles");
+assert(/ace-token-variable/.test(sourceText), "Export CSS should include variable token styles");
 assert(/detectCodeLanguage/.test(sourceText), "Exporter should infer common code block languages");
+assert(/tokenRulesForLanguage/.test(sourceText), "Highlighter should use language-aware token rules");
+assert(/dockerfile/.test(sourceText) && /tsx/.test(sourceText), "Highlighter should detect Dockerfile and TSX labels");
 assert(/Message actions/.test(sourceText), "Scraper should use Claude message action bars as a role fallback");
 assert(/Give positive feedback/.test(sourceText), "Scraper should distinguish Claude responses from feedback controls");
 assert(/collectActionGroupEntries/.test(sourceText), "Scraper should use message action groups as fallback entries");
