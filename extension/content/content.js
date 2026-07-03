@@ -121,6 +121,7 @@
   let selectionRail;
   let selectionRailFrame = 0;
   let selectionRefreshTimer;
+  let panelReturnFocusElement = null;
   const messageClickHandlers = new WeakMap();
 
   let lastRouteKey = currentRouteKey();
@@ -306,6 +307,7 @@
 
   function resetConversationState() {
     cleanupInlineSelectors();
+    closePanel({ restoreFocus: false });
     state.messages = [];
     state.selectedIds.clear();
     state.settingsOpen = false;
@@ -317,7 +319,6 @@
     state.options.assistantLabel = assistantLabel();
 
     if (panel) {
-      panel.hidden = true;
       renderPanel();
     }
 
@@ -482,6 +483,98 @@
     state.selectedIds = new Set(state.messages.filter(predicate).map((message) => message.id));
     renderPanel();
     updateInlineSelectionState();
+  }
+
+  const FOCUSABLE_SELECTOR = [
+    "a[href]",
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    "[tabindex]:not([tabindex='-1'])"
+  ].join(",");
+
+  function focusablePanelElements() {
+    if (!panel || panel.hidden) {
+      return [];
+    }
+
+    return Array.from(panel.querySelectorAll(FOCUSABLE_SELECTOR))
+      .filter((element) => element instanceof HTMLElement && isVisibleElement(element));
+  }
+
+  function focusPanelControl() {
+    window.requestAnimationFrame(() => {
+      if (!panel || panel.hidden) {
+        return;
+      }
+
+      const preferred = panel.querySelector('[data-option="format"]') ||
+        panel.querySelector('[data-action="export"]') ||
+        focusablePanelElements()[0];
+      preferred?.focus?.({ preventScroll: true });
+    });
+  }
+
+  function closePanel({ restoreFocus = true } = {}) {
+    if (!panel || panel.hidden) {
+      return;
+    }
+
+    panel.hidden = true;
+    state.settingsOpen = false;
+    state.selectionMode = false;
+    cleanupInlineSelectors();
+
+    if (launcher) {
+      launcher.hidden = false;
+    }
+
+    if (restoreFocus) {
+      const target = panelReturnFocusElement && document.documentElement.contains(panelReturnFocusElement)
+        ? panelReturnFocusElement
+        : launcher;
+      window.setTimeout(() => target?.focus?.({ preventScroll: true }), 0);
+    }
+
+    panelReturnFocusElement = null;
+  }
+
+  function handlePanelKeydown(event) {
+    if (!panel || panel.hidden) {
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      closePanel();
+      return;
+    }
+
+    if (event.key !== "Tab") {
+      return;
+    }
+
+    const focusable = focusablePanelElements();
+    if (!focusable.length) {
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+
+    if (event.shiftKey && (!panel.contains(active) || active === first)) {
+      event.preventDefault();
+      last.focus({ preventScroll: true });
+      return;
+    }
+
+    if (!event.shiftKey && (!panel.contains(active) || active === last)) {
+      event.preventDefault();
+      first.focus({ preventScroll: true });
+    }
   }
 
   function updateSelectionCount() {
@@ -952,7 +1045,7 @@
     }
 
     panel.innerHTML = `
-      <div class="ace-panel-shell" role="dialog" aria-label="AI Chat Exporter">
+      <div class="ace-panel-shell" role="dialog" aria-modal="true" aria-label="AI Chat Exporter">
         <header class="ace-panel-header">
           <div>
             <strong>Export chat</strong>
@@ -1059,6 +1152,8 @@
       }
     });
 
+    panel.addEventListener("keydown", handlePanelKeydown);
+
     panel.addEventListener("click", async (event) => {
       const button = event.target.closest("[data-action]");
       if (!button) {
@@ -1069,13 +1164,7 @@
       const action = button.dataset.action;
 
       if (action === "close") {
-        panel.hidden = true;
-        state.settingsOpen = false;
-        state.selectionMode = false;
-        cleanupInlineSelectors();
-        if (launcher) {
-          launcher.hidden = false;
-        }
+        closePanel();
         return;
       }
 
@@ -1158,6 +1247,10 @@
     ensurePanel();
     applyNativeTheme();
     await loadStoredPreferences();
+    const activeElement = document.activeElement;
+    panelReturnFocusElement = activeElement instanceof HTMLElement && activeElement !== document.body && activeElement !== document.documentElement
+      ? activeElement
+      : launcher;
     state.selectionMode = true;
     state.options.title = "";
     refreshMessages({ keepSelection: true });
@@ -1166,6 +1259,7 @@
     if (launcher) {
       launcher.hidden = true;
     }
+    focusPanelControl();
   }
 
   function buttonLabel(element) {
@@ -1415,6 +1509,12 @@
       return;
     }
 
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closePanel();
+      return;
+    }
+
     const target = event.target;
     if (target instanceof HTMLElement && target.matches("input, textarea, select, [contenteditable='true']")) {
       return;
@@ -1442,6 +1542,41 @@
     }
   }
 
+  function exporterDiagnostics() {
+    let scrapeError = "";
+    let scrapeResult = null;
+
+    try {
+      scrapeResult = scraper?.scrape?.() || null;
+    } catch (error) {
+      scrapeError = error?.message || "Could not inspect messages.";
+    }
+
+    const messages = Array.isArray(scrapeResult?.messages) ? scrapeResult.messages : [];
+    const assistantMessages = messages.filter((message) => message.role === "assistant").length;
+    const userMessages = messages.filter((message) => message.role === "user").length;
+    const launcherElement = document.getElementById("ace-exporter-launcher");
+
+    return {
+      ok: !scrapeError,
+      assistantMessages,
+      contentScript: true,
+      format: state.options.format,
+      launcherType: launcherElement?.dataset.aceNativeLauncher === "true" ? "native" : (launcherElement ? "fallback" : "missing"),
+      launcherVisible: Boolean(launcherElement && !launcherElement.hidden),
+      messageCount: messages.length,
+      panelOpen: Boolean(panel && !panel.hidden),
+      provider: currentProvider(),
+      scrapeError,
+      selectedCount: state.selectedIds.size,
+      selectionMode: state.selectionMode,
+      theme: detectClaudeTheme(),
+      title: scrapeResult?.title || utils.defaultConversationTitle(),
+      url: window.location.href,
+      userMessages
+    };
+  }
+
   function ensureLauncher() {
     if (!isSupportedPage()) {
       return;
@@ -1463,8 +1598,21 @@
   }
 
   function handleRuntimeMessage(message, sender, sendResponse) {
-    if (!message || message.type !== "ACE_OPEN_PANEL") {
+    if (!message || !["ACE_OPEN_PANEL", "ACE_GET_STATUS"].includes(message.type)) {
       return false;
+    }
+
+    if (message.type === "ACE_GET_STATUS") {
+      try {
+        sendResponse(exporterDiagnostics());
+      } catch (error) {
+        sendResponse({
+          ok: false,
+          contentScript: true,
+          scrapeError: error?.message || "Diagnostics failed."
+        });
+      }
+      return true;
     }
 
     openPanel().then(() => {

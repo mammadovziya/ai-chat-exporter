@@ -284,13 +284,11 @@
     "header",
     "nav",
     "script",
-    "style",
     "noscript",
     "button",
     "input",
     "select",
     "textarea",
-    "svg",
     "[role='button']",
     "[aria-label*='Copy' i]",
     "[aria-label*='Retry' i]",
@@ -308,6 +306,19 @@
     "[href*='support.google.com']",
     "[href*='help.openai.com']"
   ];
+
+  const TOOL_TRACE_SELECTOR = [
+    "antml\\:function_calls",
+    "antml\\:invoke",
+    "antml\\:parameter",
+    "[data-testid*='tool-call' i]",
+    "[data-testid*='function-call' i]",
+    "[data-testid*='tool-use' i]",
+    "[class*='tool-call' i]",
+    "[class*='function-call' i]",
+    "[class*='tool-use' i]"
+  ].join(",");
+  const VISUAL_MEDIA_SELECTOR = "canvas,iframe,img,object,svg,video";
 
   const TRANSCRIPT_MARKER_PATTERN = providers?.transcriptMarkerPattern("^\\s*") ||
     /^\s*(you said|claude responded|claude said|assistant responded|assistant said)\s*:\s*/i;
@@ -342,6 +353,170 @@
     "munder",
     "munderover",
     "semantics"
+  ]);
+
+  const SVG_TAGS = new Set([
+    "circle",
+    "clippath",
+    "defs",
+    "desc",
+    "ellipse",
+    "feblend",
+    "fecolormatrix",
+    "fecomposite",
+    "fedropshadow",
+    "feflood",
+    "fegaussianblur",
+    "feoffset",
+    "filter",
+    "foreignobject",
+    "g",
+    "line",
+    "lineargradient",
+    "marker",
+    "mask",
+    "path",
+    "pattern",
+    "polygon",
+    "polyline",
+    "radialgradient",
+    "rect",
+    "stop",
+    "style",
+    "svg",
+    "text",
+    "textpath",
+    "title",
+    "tspan",
+    "use"
+  ]);
+
+  const SVG_TAG_NAMES = {
+    clippath: "clipPath",
+    feblend: "feBlend",
+    fecolormatrix: "feColorMatrix",
+    fecomposite: "feComposite",
+    fedropshadow: "feDropShadow",
+    feflood: "feFlood",
+    fegaussianblur: "feGaussianBlur",
+    feoffset: "feOffset",
+    foreignobject: "foreignObject",
+    lineargradient: "linearGradient",
+    radialgradient: "radialGradient",
+    textpath: "textPath"
+  };
+
+  const SVG_ATTRIBUTES = new Set([
+    "alignment-baseline",
+    "aria-label",
+    "aria-labelledby",
+    "aria-roledescription",
+    "class",
+    "clip-path",
+    "clip-rule",
+    "color",
+    "cx",
+    "cy",
+    "d",
+    "dominant-baseline",
+    "dx",
+    "dy",
+    "fill",
+    "fill-opacity",
+    "fill-rule",
+    "filter",
+    "font-family",
+    "font-size",
+    "font-style",
+    "font-weight",
+    "gradienttransform",
+    "gradientunits",
+    "height",
+    "href",
+    "id",
+    "marker-end",
+    "marker-height",
+    "markerheight",
+    "marker-mid",
+    "marker-start",
+    "marker-width",
+    "markerwidth",
+    "mask",
+    "offset",
+    "opacity",
+    "orient",
+    "paint-order",
+    "points",
+    "preserveaspectratio",
+    "r",
+    "refx",
+    "refy",
+    "role",
+    "rx",
+    "ry",
+    "shape-rendering",
+    "spreadmethod",
+    "stop-color",
+    "stop-opacity",
+    "stroke",
+    "stroke-dasharray",
+    "stroke-dashoffset",
+    "stroke-linecap",
+    "stroke-linejoin",
+    "stroke-miterlimit",
+    "stroke-opacity",
+    "stroke-width",
+    "style",
+    "text-anchor",
+    "transform",
+    "version",
+    "viewbox",
+    "width",
+    "x",
+    "x1",
+    "x2",
+    "xlink:href",
+    "xmlns",
+    "xmlns:xlink",
+    "y",
+    "y1",
+    "y2"
+  ]);
+
+  const SVG_STYLE_PROPERTIES = new Set([
+    "alignment-baseline",
+    "clip-path",
+    "color",
+    "display",
+    "dominant-baseline",
+    "fill",
+    "fill-opacity",
+    "fill-rule",
+    "font-family",
+    "font-size",
+    "font-style",
+    "font-weight",
+    "line-height",
+    "marker-end",
+    "marker-mid",
+    "marker-start",
+    "opacity",
+    "paint-order",
+    "pointer-events",
+    "shape-rendering",
+    "stop-color",
+    "stop-opacity",
+    "stroke",
+    "stroke-dasharray",
+    "stroke-dashoffset",
+    "stroke-linecap",
+    "stroke-linejoin",
+    "stroke-miterlimit",
+    "stroke-opacity",
+    "stroke-width",
+    "text-anchor",
+    "visibility",
+    "white-space"
   ]);
 
   const ALLOWED_TAGS = new Set([
@@ -458,12 +633,19 @@
   }
 
   function nodeText(element) {
-    return utils.normalizeWhitespace(element.innerText || element.textContent || "");
+    const text = utils.normalizeWhitespace(element.innerText || element.textContent || "");
+    if (text) {
+      return text;
+    }
+
+    return diagramText(element);
   }
 
   function cleanNodeText(element) {
     const clone = cleanClone(element);
-    return stripLeadingTranscriptMarker(utils.normalizeWhitespace(clone.innerText || clone.textContent || ""));
+    clone.querySelectorAll("svg style").forEach((node) => node.remove());
+    const text = utils.normalizeWhitespace(clone.innerText || clone.textContent || "");
+    return stripLeadingTranscriptMarker(text || diagramText(clone));
   }
 
   function isDateOnlyText(value) {
@@ -576,6 +758,12 @@
   function cleanClone(element) {
     const clone = element.cloneNode(true);
     clone.querySelectorAll(REMOVE_SELECTORS.join(",")).forEach((node) => node.remove());
+    clone.querySelectorAll("style").forEach((node) => {
+      if (!isInsideSvg(node)) {
+        node.remove();
+      }
+    });
+    removeToolTraceNodes(clone);
     clone.querySelectorAll("[hidden]").forEach((node) => node.remove());
     clone.querySelectorAll("[aria-hidden='true']").forEach((node) => {
       if (!isMathElement(node) && !node.closest("math, .katex, .MathJax, [class*='math' i]")) {
@@ -704,6 +892,207 @@
     return "";
   }
 
+  function tagName(element) {
+    return element.tagName.toLowerCase();
+  }
+
+  function hasAncestorTag(element, targetTag) {
+    let current = element.parentElement;
+    while (current) {
+      if (tagName(current) === targetTag) {
+        return true;
+      }
+      current = current.parentElement;
+    }
+    return false;
+  }
+
+  function isInsideSvg(element) {
+    return Boolean(element.closest?.("svg"));
+  }
+
+  function toolTraceText(value) {
+    const text = utils.normalizeWhitespace(value || "").toLowerCase();
+    return Boolean(text) && /^(?:v\s+)*(?:visualize|show_widget)(?:\s+(?:v|visualize|show_widget))*$/.test(text);
+  }
+
+  function toolTraceSignature(element) {
+    return [
+      tagName(element),
+      classText(element),
+      element.getAttribute("data-testid"),
+      element.getAttribute("data-test-id"),
+      element.getAttribute("aria-label")
+    ].join(" ").toLowerCase();
+  }
+
+  function isToolTraceElement(element) {
+    if (!(element instanceof Element) || element.querySelector(VISUAL_MEDIA_SELECTOR)) {
+      return false;
+    }
+
+    return /\bantml\b|function[_-]?calls?|tool[_-]?calls?|tool[_-]?use/i.test(toolTraceSignature(element)) ||
+      toolTraceText(element.textContent);
+  }
+
+  function removeToolTraceNodes(clone) {
+    Array.from(clone.querySelectorAll(TOOL_TRACE_SELECTOR)).forEach((node) => {
+      if (!node.querySelector(VISUAL_MEDIA_SELECTOR)) {
+        node.remove();
+      }
+    });
+
+    Array.from(clone.querySelectorAll("*")).forEach((node) => {
+      if (isToolTraceElement(node)) {
+        node.remove();
+      }
+    });
+  }
+
+  function isSvgSerializableElement(element) {
+    const tag = tagName(element);
+    return SVG_TAGS.has(tag) && isInsideSvg(element) && !hasAncestorTag(element, "foreignobject");
+  }
+
+  function diagramText(element) {
+    const svgs = element.matches?.("svg") ? [element] : Array.from(element.querySelectorAll?.("svg") || []);
+    return utils.normalizeWhitespace(svgs.map((svg) => {
+      const clone = svg.cloneNode(true);
+      clone.querySelectorAll("style").forEach((node) => node.remove());
+      return [
+        svg.getAttribute("aria-label"),
+        clone.querySelector("title")?.textContent,
+        clone.querySelector("desc")?.textContent,
+        clone.textContent
+      ].filter(Boolean).join(" ");
+    }).join(" "));
+  }
+
+  function hasUnsafeSvgReference(value) {
+    return /(?:javascript|vbscript|data):/i.test(value || "") ||
+      /url\(\s*['"]?(?!#)[^)]+\)/i.test(value || "");
+  }
+
+  function safeLocalSvgReference(value) {
+    const trimmed = String(value || "").trim();
+    return /^#[\w:.-]+$/.test(trimmed) ? trimmed : "";
+  }
+
+  function sanitizeSvgCss(value) {
+    const css = String(value || "");
+    if (/@import|(?:javascript|vbscript|data):|expression\s*\(/i.test(css)) {
+      return "";
+    }
+
+    return css.replace(/url\(\s*['"]?(?!#)[^)]+\)/gi, "none").trim();
+  }
+
+  function sanitizeSvgStyleAttribute(value) {
+    return String(value || "")
+      .split(";")
+      .map((declaration) => declaration.trim())
+      .filter(Boolean)
+      .map((declaration) => {
+        const separator = declaration.indexOf(":");
+        if (separator === -1) {
+          return "";
+        }
+
+        const property = declaration.slice(0, separator).trim().toLowerCase();
+        const styleValue = declaration.slice(separator + 1).trim();
+        if (!SVG_STYLE_PROPERTIES.has(property) || hasUnsafeSvgReference(styleValue) || /[<>]/.test(styleValue)) {
+          return "";
+        }
+
+        return `${property}: ${styleValue}`;
+      })
+      .filter(Boolean)
+      .join("; ");
+  }
+
+  function serializeSvgAttributes(element, outputTag) {
+    const attrs = [];
+    let hasClass = false;
+    let hasXmlns = false;
+
+    for (const attr of Array.from(element.attributes)) {
+      const name = attr.name;
+      const lowerName = name.toLowerCase();
+      let value = attr.value;
+
+      if (/^on/i.test(name) || !/^[\w:.-]+$/.test(name) || (!SVG_ATTRIBUTES.has(lowerName) && !lowerName.startsWith("aria-"))) {
+        continue;
+      }
+
+      if (lowerName === "href" || lowerName === "xlink:href") {
+        value = safeLocalSvgReference(value);
+        if (!value) {
+          continue;
+        }
+      } else if (lowerName === "style") {
+        value = sanitizeSvgStyleAttribute(value);
+        if (!value) {
+          continue;
+        }
+      } else if (hasUnsafeSvgReference(value) || /[<>]/.test(value)) {
+        continue;
+      }
+
+      if (lowerName === "class") {
+        hasClass = true;
+        if (outputTag === "svg" && !/\bace-export-diagram\b/.test(value)) {
+          value = `${value} ace-export-diagram`.trim();
+        }
+      }
+
+      if (lowerName === "xmlns") {
+        hasXmlns = true;
+      }
+
+      attrs.push(`${name}="${utils.escapeHtml(value)}"`);
+    }
+
+    if (outputTag === "svg") {
+      if (!hasClass) {
+        attrs.push('class="ace-export-diagram"');
+      }
+      if (!hasXmlns) {
+        attrs.push('xmlns="http://www.w3.org/2000/svg"');
+      }
+    }
+
+    return attrs.length ? ` ${attrs.join(" ")}` : "";
+  }
+
+  function serializeSvgNode(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return utils.escapeHtml(node.textContent);
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return "";
+    }
+
+    const element = node;
+    const tag = tagName(element);
+
+    if (!SVG_TAGS.has(tag)) {
+      return Array.from(element.childNodes).map(serializeSanitizedNode).join("");
+    }
+
+    if (tag === "style") {
+      const css = sanitizeSvgCss(element.textContent);
+      return css ? `<style>${utils.escapeHtml(css)}</style>` : "";
+    }
+
+    const outputTag = SVG_TAG_NAMES[tag] || tag;
+    const children = tag === "foreignobject"
+      ? Array.from(element.childNodes).map(serializeSanitizedNode).join("")
+      : Array.from(element.childNodes).map(serializeSvgNode).join("");
+
+    return `<${outputTag}${serializeSvgAttributes(element, tag)}>${children}</${outputTag}>`;
+  }
+
   function serializeAllowedAttributes(element) {
     const tag = element.tagName.toLowerCase();
     const attrs = [];
@@ -752,6 +1141,14 @@
 
     const element = node;
     const tag = element.tagName.toLowerCase();
+
+    if (isSvgSerializableElement(element)) {
+      return serializeSvgNode(element);
+    }
+
+    if (tag === "style") {
+      return "";
+    }
 
     if (isMathElement(element) && tag !== "semantics" && tag !== "annotation") {
       const renderedMath = mathHtml(element);
@@ -840,6 +1237,11 @@
     const tag = element.tagName.toLowerCase();
     const children = () => markdownChildren(element);
     const text = () => markdownText(element.textContent);
+
+    if (tag === "svg") {
+      const label = diagramText(element);
+      return label ? `[Diagram: ${label}]\n\n` : "[Diagram]\n\n";
+    }
 
     if (isMathElement(element)) {
       const formula = mathText(element);

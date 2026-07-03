@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.16
+
+- Added fixture-based scraper regression tests for Claude, ChatGPT, Gemini, and
+  Grok.
+- Added Playwright browser UI tests for native launcher placement, compact
+  export panel behavior, message selection, keyboard shortcuts, and focus
+  handling.
+- Added popup diagnostics for provider detection, content-script status,
+  message counts, and Export button placement.
+- Improved accessibility with modal dialog semantics, focus trapping, Escape
+  close, and focus restoration.
+- Added GitHub release automation, version checks, publishing docs, QA
+  checklist, store listing copy, security review docs, support docs, issue
+  templates, PR template, and Dependabot.
+- Narrowed the in-page export panel and restored the README overview visual.
+
 ## 1.1.15
 
 - Moved selected-message highlighting into a measured selection-frame overlay

@@ -1,0 +1,70 @@
+name: Provider breakage
+description: Export button, scraping, or selection is broken on a supported AI chat site.
+title: "[Provider] "
+labels:
+  - provider-breakage
+  - bug
+body:
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options:
+        - Claude
+        - ChatGPT
+        - Gemini
+        - Grok
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Chromium
+        - Firefox
+        - Edge
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: extension-version
+    attributes:
+      label: Extension version
+      placeholder: "1.1.15"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What broke?
+      description: Describe what happened and what you expected.
+      placeholder: "Export button does not appear / messages missing / selected boxes misplaced..."
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Popup diagnostics
+      description: Open the extension popup, press Check, and paste the Site, Script, Messages, and Export button values.
+      placeholder: "Site: ChatGPT\nScript: Connected\nMessages: 6 total, 3 you, 3 AI\nExport button: Native visible"
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open ...\n2. Click ...\n3. See ..."
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshot
+      description: Attach a screenshot if it is safe to share. Redact private conversation content.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed private conversation content, secrets, and personal data from this report.
+          required: true

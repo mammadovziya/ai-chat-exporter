@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Grok Export Fixture - Grok</title>
+  </head>
+  <body>
+    <aside>
+      <button>Private Chat</button>
+      <button>Explore</button>
+      <button>Sign in</button>
+    </aside>
+    <header role="banner">
+      <button type="button" aria-label="Share this chat">Share</button>
+    </header>
+    <main>
+      <section data-testid="conversation">
+        <article data-testid="user-message" data-author="user" class="message-bubble user-message" data-fixture-left="780">
+          summarize this repo
+        </article>
+        <article data-testid="assistant-message" data-author="assistant" class="message-bubble assistant-message">
+          <div class="prose response-content">
+            <p>It is a privacy-first browser extension for exporting AI chats.</p>
+            <table>
+              <tr><th>Area</th><th>Status</th></tr>
+              <tr><td>Privacy</td><td>Local-first</td></tr>
+            </table>
+          </div>
+        </article>
+        <article data-testid="user-message" data-author="user" class="message-bubble user-message" data-fixture-left="780">
+          show install command
+        </article>
+        <article data-testid="assistant-message" data-author="assistant" class="message-bubble assistant-message">
+          <div class="prose response-content">
+            <p>Build from source with:</p>
+            <pre><code class="language-bash">npm run build</code></pre>
+          </div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

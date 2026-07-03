@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Python Code Snippets For Common Tasks - Gemini</title>
+  </head>
+  <body>
+    <aside>
+      <button>Search chats</button>
+      <button>New notebook</button>
+      <button>Upgrade</button>
+    </aside>
+    <header role="banner">
+      <button type="button" aria-label="Upgrade">Upgrade</button>
+    </header>
+    <main>
+      <user-query data-fixture-left="780">
+        <div class="query-content">
+          <p>give me short python code</p>
+        </div>
+      </user-query>
+      <model-response>
+        <message-content class="model-response-text">
+          <p>Here are three short, clean Python snippets for common use cases.</p>
+          <h2>1. List Comprehension</h2>
+          <pre><code class="language-python">numbers = [1, 2, 3, 4, 5, 6]
+even_squares = [x**2 for x in numbers if x % 2 == 0]</code></pre>
+        </message-content>
+      </model-response>
+      <user-query data-fixture-left="780">
+        <div class="query-text">
+          <p>also show a formula</p>
+        </div>
+      </user-query>
+      <model-response>
+        <message-content>
+          <p>Quadratic Formula:</p>
+          <div class="katex-display">
+            <math display="block">
+              <semantics>
+                <mrow><mi>x</mi><mo>=</mo><mfrac><mrow><mo>-</mo><mi>b</mi><mo>&#177;</mo><msqrt><mrow><msup><mi>b</mi><mn>2</mn></msup><mo>-</mo><mn>4</mn><mi>a</mi><mi>c</mi></mrow></msqrt></mrow><mrow><mn>2</mn><mi>a</mi></mrow></mfrac></mrow>
+                <annotation encoding="application/x-tex">x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}</annotation>
+              </semantics>
+            </math>
+          </div>
+        </message-content>
+      </model-response>
+    </main>
+  </body>
+</html>

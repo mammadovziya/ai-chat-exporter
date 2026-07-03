@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Security Testing Fixture - Claude</title>
+  </head>
+  <body>
+    <aside>
+      <a>New chat</a>
+      <a>Projects</a>
+      <a>Upgrade</a>
+    </aside>
+    <header role="banner">
+      <button type="button" aria-label="Share">Share</button>
+    </header>
+    <main>
+      <section data-testid="conversation">
+        <article>
+          <div class="font-user-message" data-fixture-left="780">
+            <p>older scan scope question with permission details</p>
+          </div>
+        </article>
+        <article>
+          <div class="font-claude-message markdown">
+            <p>Use <code>scanme.nmap.org</code> for practice and keep tests authorized.</p>
+            <pre><code class="language-bash">nmap -sV scanme.nmap.org</code></pre>
+            <p>
+              Inline math:
+              <span class="katex">
+                <math>
+                  <semantics>
+                    <mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow>
+                    <annotation encoding="application/x-tex">E = mc^2</annotation>
+                  </semantics>
+                </math>
+              </span>
+            </p>
+          </div>
+          <div role="group" aria-label="Message actions">
+            <button aria-label="Give positive feedback"></button>
+          </div>
+        </article>
+        <article>
+          <div class="font-user-message" data-fixture-left="780">
+            <p>Show me a table and python code.</p>
+          </div>
+        </article>
+        <article>
+          <div class="font-claude-message markdown">
+            <table>
+              <tr><th>Item</th><th>Value</th></tr>
+              <tr><td>Permission</td><td>Required</td></tr>
+            </table>
+            <pre><code class="language-python">def audit_target(host):
+    return {"host": host, "allowed": True}</code></pre>
+          </div>
+          <div role="group" aria-label="Message actions">
+            <button aria-label="Give positive feedback"></button>
+          </div>
+        </article>
+        <article>
+          <div class="font-user-message" data-fixture-left="780">
+            <p>Create a simple flowchart diagram.</p>
+          </div>
+        </article>
+        <article>
+          <div class="font-claude-message markdown">
+            <p>Here is the flow:</p>
+            <antml:function_calls>
+              <antml:invoke name="visualize">
+                <antml:parameter name="action">show_widget</antml:parameter>
+              </antml:invoke>
+            </antml:function_calls>
+            <svg class="mermaid flowchart" viewBox="0 0 420 130" width="420" height="130" role="img" aria-label="Plan Build Ship flowchart">
+              <style>
+                .node rect { fill: #eef6ff; stroke: #1f4e79; }
+                .edge { stroke: #1f4e79; stroke-width: 2; marker-end: url(#arrowhead); }
+              </style>
+              <title>Plan Build Ship flowchart</title>
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#1f4e79"></path>
+                </marker>
+              </defs>
+              <g class="node" transform="translate(20 35)">
+                <rect width="90" height="44" rx="6"></rect>
+                <foreignObject x="0" y="0" width="90" height="44">
+                  <div><span>Plan</span></div>
+                </foreignObject>
+              </g>
+              <path class="edge" d="M115 57 L165 57"></path>
+              <g class="node" transform="translate(170 35)">
+                <rect width="90" height="44" rx="6"></rect>
+                <text x="45" y="27" text-anchor="middle">Build</text>
+              </g>
+              <path class="edge" d="M265 57 L315 57"></path>
+              <g class="node" transform="translate(320 35)">
+                <rect width="80" height="44" rx="6"></rect>
+                <text x="40" y="27" text-anchor="middle">Ship</text>
+              </g>
+            </svg>
+          </div>
+          <div role="group" aria-label="Message actions">
+            <button aria-label="Give positive feedback"></button>
+          </div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

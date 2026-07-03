@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Short Python Code | ChatGPT</title>
+  </head>
+  <body>
+    <nav>
+      <a>Library</a>
+      <a>Scheduled</a>
+      <a>Pinned</a>
+    </nav>
+    <header role="banner">
+      <button type="button" aria-label="Share chat">Share</button>
+    </header>
+    <main>
+      <div data-testid="conversation">
+        <article data-testid="conversation-turn-1" data-message-author-role="user" data-fixture-left="760">
+          <div class="whitespace-pre-wrap">give me short python code</div>
+        </article>
+        <article data-testid="conversation-turn-2" data-message-author-role="assistant">
+          <div class="markdown prose">
+            <p>Here is a compact example.</p>
+            <pre><code class="language-python">for i in range(1, 6):
+    print(f"{i} squared is {i ** 2}")</code></pre>
+          </div>
+        </article>
+        <article data-testid="conversation-turn-3" data-message-author-role="user" data-fixture-left="760">
+          <div class="whitespace-pre-wrap">make it return JSON</div>
+        </article>
+        <article data-testid="conversation-turn-4" data-message-author-role="assistant">
+          <div class="markdown prose">
+            <p>This returns a dictionary that can be serialized.</p>
+            <table>
+              <tr><th>Key</th><th>Meaning</th></tr>
+              <tr><td>ok</td><td>operation status</td></tr>
+            </table>
+          </div>
+        </article>
+      </div>
+    </main>
+  </body>
+</html>

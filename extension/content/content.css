@@ -326,7 +326,7 @@
   position: fixed;
   right: 8px;
   top: 8px;
-  width: min(356px, calc(100vw - 16px));
+  width: min(224px, calc(100vw - 16px));
   z-index: 2147483641;
 }
 
@@ -368,7 +368,7 @@
   align-items: center;
   display: flex;
   justify-content: space-between;
-  padding: 8px 10px;
+  padding: 7px 9px;
 }
 
 .ace-panel-header {
@@ -394,8 +394,8 @@
   border-bottom: 1px solid var(--ace-native-border);
   display: grid;
   flex: 0 0 auto;
-  gap: 7px;
-  padding: 8px 10px;
+  gap: 6px;
+  padding: 7px 9px;
 }
 
 .ace-panel-section[hidden] {
@@ -421,9 +421,9 @@
   border-radius: 8px;
   color: var(--ace-native-text);
   font: inherit;
-  min-height: 34px;
+  min-height: 32px;
   min-width: 0;
-  padding: 6px 9px;
+  padding: 5px 8px;
   width: 100%;
 }
 
@@ -438,9 +438,9 @@
   align-items: center;
   border-bottom: 1px solid var(--ace-native-border);
   display: grid;
-  gap: 6px;
+  gap: 5px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: 8px;
+  padding: 7px;
 }
 
 .ace-quick-export label {
@@ -492,9 +492,9 @@
   border-bottom: 1px solid var(--ace-native-border);
   display: grid;
   flex: 0 0 auto;
-  gap: 4px;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  padding: 6px 8px;
+  gap: 5px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 6px 7px;
 }
 
 .ace-selection-toolbar button,
@@ -506,6 +506,10 @@
   font: inherit;
   min-height: 32px;
   min-width: 0;
+}
+
+.ace-selection-toolbar button[data-action="clear"] {
+  grid-column: 1 / -1;
 }
 
 .ace-selection-toolbar button,
@@ -524,7 +528,7 @@
 
 .ace-selection-toolbar button,
 .ace-quick-export button {
-  padding: 0 7px;
+  padding: 0 6px;
 }
 
 .ace-button-content {

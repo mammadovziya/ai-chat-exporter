@@ -7,29 +7,96 @@
     <link rel="stylesheet" href="popup.css">
   </head>
   <body>
-    <main>
+    <main class="popup-shell">
       <header class="popup-header">
-        <img src="icons/icon48.png" alt="" width="48" height="48">
+        <img src="icons/icon48.png" alt="" width="36" height="36">
         <div>
           <strong>AI Chat Exporter</strong>
-          <span>Local AI chat exports</span>
+          <span>Private chat exports</span>
         </div>
       </header>
-      <div class="format-strip" aria-label="Supported formats">
-        <span>PDF</span>
-        <span>MD</span>
-        <span>TXT</span>
-        <span>JSON</span>
-        <span>CSV</span>
-        <span>PNG</span>
+
+      <div class="trust-strip" aria-label="Project trust labels">
+        <span class="trust-chip trust-open">
+          <span class="chip-mark" aria-hidden="true"></span>
+          <span class="chip-text"><b>Open</b> source</span>
+        </span>
+        <span class="trust-chip trust-private">
+          <span class="chip-mark" aria-hidden="true"></span>
+          <span class="chip-text"><b>100%</b> private</span>
+        </span>
+        <span class="trust-chip trust-local">
+          <span class="chip-mark" aria-hidden="true"></span>
+          <span class="chip-text"><b>100%</b> local</span>
+        </span>
       </div>
-      <button id="open-exporter" type="button">
-        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-          <path d="M12 3v11M7 10l5 5 5-5M5 21h14"/>
-        </svg>
-        <span>Open exporter</span>
-      </button>
-      <p id="status" role="status">Open Claude, ChatGPT, Gemini, or Grok to begin.</p>
+
+      <section class="current-tab" aria-label="Current tab">
+        <div class="tab-status">
+          <span id="support-dot" class="status-dot" aria-hidden="true"></span>
+          <div>
+            <strong id="active-provider">Checking...</strong>
+            <span id="active-host">Looking at the active tab</span>
+          </div>
+        </div>
+        <button id="open-exporter" class="primary-action" type="button" disabled>
+          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+            <path d="M12 3v11M7 10l5 5 5-5M5 21h14"/>
+          </svg>
+          <span data-action-label>Open exporter</span>
+        </button>
+        <p id="status" role="status">Checking active tab...</p>
+      </section>
+
+      <section class="diagnostics-panel" aria-label="Page diagnostics">
+        <div class="diagnostics-head">
+          <div>
+            <span class="support-kicker">Diagnostics</span>
+            <strong>Page health</strong>
+          </div>
+          <button id="run-diagnostics" class="secondary-action" type="button" disabled>Check</button>
+        </div>
+        <dl id="diagnostics-list" class="diagnostics-list">
+          <div>
+            <dt>Site</dt>
+            <dd data-diagnostic="site">Checking...</dd>
+          </div>
+          <div>
+            <dt>Script</dt>
+            <dd data-diagnostic="script">Waiting</dd>
+          </div>
+          <div>
+            <dt>Messages</dt>
+            <dd data-diagnostic="messages">-</dd>
+          </div>
+          <div>
+            <dt>Export button</dt>
+            <dd data-diagnostic="launcher">-</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="support-panel" aria-label="Project support">
+        <div class="support-head">
+          <div>
+            <span class="support-kicker">Open source</span>
+            <strong>Improve the exporter</strong>
+          </div>
+          <span class="github-label">GitHub</span>
+        </div>
+        <button class="repo-preview" type="button" data-open-url="https://github.com/mammadovziya/ai-chat-exporter">
+          <span class="repo-owner">mammadovziya</span>
+          <span class="repo-name">ai-chat-exporter</span>
+        </button>
+        <div class="support-actions">
+          <button class="link-button" type="button" data-tone="star" data-open-url="https://github.com/mammadovziya/ai-chat-exporter/stargazers">
+            Star project
+          </button>
+          <button class="link-button" type="button" data-open-url="https://github.com/mammadovziya/ai-chat-exporter/issues">
+            Report issue
+          </button>
+        </div>
+      </section>
     </main>
     <script src="shared/providers.js"></script>
     <script src="popup.js"></script>

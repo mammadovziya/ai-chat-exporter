@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version 1.1.15" src="https://img.shields.io/badge/version-1.1.15-12312d?style=flat-square" />
+  <img alt="Version 1.1.16" src="https://img.shields.io/badge/version-1.1.16-12312d?style=flat-square" />
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2d7468?style=flat-square" />
   <img alt="Chrome Manifest V3" src="https://img.shields.io/badge/Chrome-Manifest%20V3-4285f4?style=flat-square" />
   <img alt="Firefox 121 plus" src="https://img.shields.io/badge/Firefox-121%2B-ff7139?style=flat-square" />
@@ -21,7 +21,7 @@ ChatGPT conversations, Claude chats, Gemini responses, and Grok threads without
 sending your data to a server. Select the exact messages you want, choose an
 export format, and save clean conversation files directly from your browser.
 
-![AI Chat Exporter interface showing message selection and export controls for AI chat conversations](docs/visuals/overview.svg)
+![AI Chat Exporter overview showing native export button, message selection, compact panel, and local privacy labels](docs/visuals/overview.svg)
 
 ## Why Use AI Chat Exporter?
 
@@ -155,6 +155,7 @@ Keyboard shortcuts while the export panel is open:
 | `Alt+C` | Select assistant messages |
 | `Alt+Y` | Select your messages |
 | `Alt+N` or `Alt+D` | Deselect all messages |
+| `Escape` | Close the export panel |
 
 ## Formatting Support
 
@@ -187,6 +188,9 @@ If messages are missing:
 - Scroll the conversation so older messages load.
 - Click **Refresh** in the export panel.
 - Try selecting messages directly in the chat.
+- Open the extension popup and press **Check** to see whether the content
+  script is connected, how many messages were detected, and whether the native
+  Export button was placed.
 - Open an issue with the provider name, browser, extension version, what failed,
   and a screenshot.
 
@@ -199,11 +203,23 @@ npm run icons      # regenerate extension icons
 npm run build      # build dist/chrome and dist/firefox
 npm test           # run smoke tests against built targets
 npm run check      # build and test
+npm run test:browser # run Playwright UI checks against local provider fixtures
 npm run package    # create Chrome ZIP and Firefox XPI
 npm run release    # check and package
 ```
 
 Release artifacts are written to `web-ext-artifacts/`.
+
+If `npm run test:browser` cannot find a browser locally, run:
+
+```bash
+npx playwright install chromium
+```
+
+For store release steps, read [docs/PUBLISHING.md](docs/PUBLISHING.md).
+For manual release QA, read [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md).
+For export fidelity notes, read [docs/EXPORT_QUALITY.md](docs/EXPORT_QUALITY.md).
+For the project security review, read [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md).
 
 ## Project Structure
 
@@ -215,20 +231,29 @@ extension/
   manifest.*.json   Browser-specific source manifests
 scripts/
   build.mjs         Builds dist/chrome and dist/firefox
+  browser-ui-test.mjs
   generate-icons.mjs
   package.mjs       Creates Chrome ZIP and Firefox XPI artifacts
+  fixture-scraper-test.mjs
   smoke-test.mjs    Static safety and packaging checks
 docs/
-  visuals/          README visuals
+  visuals/          README and store-supporting visuals
+  PUBLISHING.md     Store submission and GitHub release steps
+  QA_CHECKLIST.md   Manual release checks
+  EXPORT_QUALITY.md Export fidelity notes and limitations
+  SECURITY_REVIEW.md Permission and data-flow review
+  STORE_LISTING.md  Store listing copy and screenshot checklist
 ```
 
 ## Security
 
-Please report security issues privately. See [SECURITY.md](SECURITY.md).
+Please report security issues privately. See [SECURITY.md](SECURITY.md) and
+[docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md).
 
 ## Contributing
 
-Bug reports and pull requests are welcome. For provider breakage, include:
+Bug reports and pull requests are welcome. Use the GitHub issue templates for
+provider breakage, bugs, and feature requests. For provider breakage, include:
 
 - provider name
 - browser

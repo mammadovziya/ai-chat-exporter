@@ -1,6 +1,7 @@
 dist/
 node_modules/
 web-ext-artifacts/
+test-results/
 *.zip
 *.crx
 *.xpi

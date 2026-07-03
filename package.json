@@ -1,6 +1,6 @@
 {
   "name": "ai-chat-exporter",
-  "version": "1.1.15",
+  "version": "1.1.16",
   "private": true,
   "type": "module",
   "description": "A privacy-first browser extension for exporting Claude, ChatGPT, Gemini, and Grok chats to PDF, Markdown, Text, JSON, CSV, and PNG.",
@@ -10,8 +10,12 @@
     "icons": "node scripts/generate-icons.mjs",
     "package": "npm run build && node scripts/package.mjs",
     "release": "npm run check && npm run package",
-    "test": "node scripts/smoke-test.mjs",
-    "check": "npm run build && npm test"
+    "test": "npm run test:smoke && npm run test:fixtures",
+    "test:browser": "node scripts/browser-ui-test.mjs",
+    "test:fixtures": "node scripts/fixture-scraper-test.mjs",
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "version:check": "node scripts/verify-version.mjs",
+    "check": "npm run version:check && npm run build && npm test"
   },
   "keywords": [
     "ai-chat-exporter",
@@ -42,5 +46,9 @@
     "privacy-first",
     "local-first",
     "open-source"
-  ]
+  ],
+  "devDependencies": {
+    "jsdom": "^29.1.1",
+    "playwright": "^1.61.1"
+  }
 }

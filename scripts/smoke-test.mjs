@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const extensionDir = path.join(rootDir, "extension");
 const distDir = path.join(rootDir, "dist");
+const docsDir = path.join(rootDir, "docs");
+const githubDir = path.join(rootDir, ".github");
 
 function assert(condition, message) {
   if (!condition) {
@@ -65,11 +67,24 @@ for (const browserName of ["chrome", "firefox"]) {
 }
 
 const sourceFiles = await walkFiles(extensionDir);
-const sourceText = (await Promise.all(sourceFiles.map((file) => readFile(file, "utf8")))).join("\n");
+const docsFiles = await walkFiles(docsDir);
+const githubFiles = await walkFiles(githubDir);
+const projectGuardFiles = [
+  ...sourceFiles,
+  ...docsFiles,
+  ...githubFiles,
+  path.join(rootDir, "package.json"),
+  path.join(rootDir, "CONTRIBUTING.md"),
+  path.join(rootDir, "SECURITY.md"),
+  path.join(rootDir, "SUPPORT.md"),
+  path.join(rootDir, "scripts", "verify-version.mjs"),
+];
+const runtimeSourceText = (await Promise.all(sourceFiles.map((file) => readFile(file, "utf8")))).join("\n");
+const sourceText = (await Promise.all(projectGuardFiles.map((file) => readFile(file, "utf8")))).join("\n");
 
-assert(!/\bfetch\s*\(/.test(sourceText), "Source should not use fetch");
-assert(!/\bXMLHttpRequest\b/.test(sourceText), "Source should not use XMLHttpRequest");
-assert(!/analytics|telemetry|tracking/i.test(sourceText), "Source should not include analytics or tracking code");
+assert(!/\bfetch\s*\(/.test(runtimeSourceText), "Source should not use fetch");
+assert(!/\bXMLHttpRequest\b/.test(runtimeSourceText), "Source should not use XMLHttpRequest");
+assert(!/analytics|telemetry|tracking/i.test(runtimeSourceText), "Source should not include analytics or tracking code");
 assert(/format:\s*"markdown"/.test(sourceText), "Exporter should include Markdown support");
 assert(/format:\s*"pdf"/.test(sourceText), "Exporter should include PDF support");
 assert(/format:\s*"png"/.test(sourceText), "Exporter should include PNG support");
@@ -123,10 +138,14 @@ assert(/makeNativeLauncher/.test(sourceText), "Launcher should clone native butt
 assert(/insertAdjacentElement\("afterend", launcher\)/.test(sourceText), "Launcher should sit next to Share");
 assert(/data-ace-native-launcher/.test(sourceText), "Native launcher should avoid floating fallback styles");
 assert(/removeAttribute\("disabled"\)/.test(sourceText) && /button\.disabled\s*=\s*false/.test(sourceText), "Native launcher should not inherit disabled share button state");
-assert(/width:\s*min\(356px/.test(sourceText), "Panel should stay compact while keeping button labels readable");
+assert(/width:\s*min\(224px/.test(sourceText), "Panel should stay compact while keeping button labels readable");
 assert(/max-height:\s*min\(392px/.test(sourceText), "Panel should use compact height instead of full viewport height");
 assert(/ace-quick-export/.test(sourceText), "Panel should prioritize quick export over large settings");
 assert(/state\.settingsOpen/.test(sourceText), "Detailed settings should be collapsible");
+assert(/aria-modal="true"/.test(sourceText), "Export panel should expose modal dialog semantics");
+assert(/handlePanelKeydown/.test(sourceText) && /event\.key === "Escape"/.test(sourceText), "Export panel should close with Escape");
+assert(/focusablePanelElements/.test(sourceText) && /event\.key !== "Tab"/.test(sourceText), "Export panel should trap keyboard focus while open");
+assert(/panelReturnFocusElement/.test(sourceText) && /preventScroll: true/.test(sourceText), "Export panel should restore focus to the launcher");
 assert(/assistantShortLabel/.test(sourceText), "Compact toolbar should use short provider labels");
 assert(/data-provider/.test(sourceText), "Panel styles should use provider-aware native accents");
 assert(/data-provider="gemini"/.test(sourceText), "Gemini should get provider-specific native styling");
@@ -165,8 +184,21 @@ assert(/PROVIDER_MESSAGE_SELECTOR_GROUPS/.test(sourceText), "Provider scrapers s
 assert(/messageSelectableElement/.test(sourceText), "Selection state should attach to visible message anchors");
 assert(/USER_MESSAGE_ANCHOR_SELECTOR/.test(sourceText) && /ASSISTANT_MESSAGE_ANCHOR_SELECTOR/.test(sourceText), "Selection anchors should be role-aware");
 assert(/wakeContentScript/.test(sourceText) && /api\.scripting\.executeScript/.test(sourceText), "Popup should wake the exporter when content scripts are missing");
+assert(/ACE_GET_STATUS/.test(sourceText), "Popup should support local diagnostics for supported chat pages");
+assert(/run-diagnostics/.test(sourceText) && /data-diagnostic="messages"/.test(sourceText), "Popup should show page diagnostics");
+assert(/exporterDiagnostics/.test(sourceText), "Content script should report local exporter diagnostics");
 assert(/share this chat/.test(sourceText) && /copy link/.test(sourceText), "Grok launcher should recognize current share labels");
 assert(/query-content/.test(sourceText) && /query-container/.test(sourceText), "Gemini user queries should use current query selectors");
 assert(/isProviderCandidate/.test(sourceText), "Provider scraping should keep short visible messages");
+assert(/verify-version\.mjs/.test(sourceText) && /GITHUB_REF_NAME/.test(sourceText), "Release workflow should verify tag and manifest versions");
+assert(/gh release create/.test(sourceText), "Release workflow should publish packaged artifacts to GitHub releases");
+assert(/Chrome Web Store/.test(sourceText) && /Firefox Add-ons/.test(sourceText) && /Mozilla signing/.test(sourceText), "Publishing docs should cover Chrome and Firefox store release paths");
+assert(/Provider breakage/.test(sourceText) && /Popup diagnostics/.test(sourceText), "Issue templates should capture provider breakage diagnostics");
+assert(/pull_request_template/.test(githubFiles.join("\n")) && /npm run test:browser/.test(sourceText), "Pull requests should include test and privacy checklists");
+assert(/dependabot\.yml/.test(githubFiles.join("\n")) && /github-actions/.test(sourceText), "Dependabot should maintain npm and GitHub Actions tooling");
+assert(/Security Review/.test(sourceText) && /Trust Boundaries/.test(sourceText), "Security review docs should describe trust boundaries");
+assert(/Store Listing/.test(sourceText) && /Permission Justification/.test(sourceText), "Store listing docs should include permission copy");
+assert(/Export Quality/.test(sourceText) && /Current Limitations/.test(sourceText), "Export quality docs should describe limitations");
+assert(/QA Checklist/.test(sourceText) && /Provider Matrix/.test(sourceText), "QA checklist should cover provider release checks");
 
 console.log("Smoke tests passed");

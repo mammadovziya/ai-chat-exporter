@@ -14,6 +14,10 @@ Project safety principles:
 - Keep permissions narrow.
 - Do not add server-side processing for conversation content.
 - Do not add analytics or remote logging.
-- Treat Claude page markup as untrusted input and sanitize exported HTML.
+- Treat supported AI chat page markup as untrusted input and sanitize exported
+  HTML.
 - Prefer transparent, inspectable code over opaque dependencies.
 - Keep release artifacts reproducible from the source tree.
+
+For the detailed threat model, permission rationale, sanitization notes, and
+security checklist, see `docs/SECURITY_REVIEW.md`.
