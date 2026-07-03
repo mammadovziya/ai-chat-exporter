@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.15
+
+- Moved selected-message highlighting into a measured selection-frame overlay
+  so Gemini and other providers do not draw outlines underneath the export
+  panel.
+- Clipped selection frames to the same safe right edge used by selection
+  checkboxes when the panel overlaps a message vertically.
+- Kept provider theme colors on selection frames as the page theme changes.
+
 ## 1.1.14
 
 - Improved local syntax highlighting with functions, properties, variables,

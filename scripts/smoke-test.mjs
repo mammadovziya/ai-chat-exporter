@@ -135,6 +135,8 @@ assert(/messageClickHandler/.test(sourceText), "Clicking the message itself shou
 assert(/muteExport/.test(sourceText), "Exporter should include muted export alerts");
 assert(/iconSvg/.test(sourceText), "Exporter UI should use inline icons without remote assets");
 assert(/ace-selection-rail/.test(sourceText), "Message selection boxes should live in a single side rail");
+assert(/ace-chat-selection-frame/.test(sourceText), "Selected messages should use a measured overlay frame");
+assert(/selectionFrameRect/.test(sourceText), "Selection frames should be clipped away from the export panel");
 assert(/selectionButtonLeft/.test(sourceText), "Selection buttons should stay on each message");
 assert(/messageAnchorRect/.test(sourceText) && /MESSAGE_ANCHOR_SELECTOR/.test(sourceText), "Selection buttons should anchor to visible message content");
 assert(/outsideRightEdge/.test(sourceText) && /insideRightEdge/.test(sourceText), "Selection buttons should prefer the absolute right side of each message");

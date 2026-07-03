@@ -256,6 +256,7 @@
       selectionRail.remove();
       selectionRail = undefined;
     }
+    document.querySelectorAll(".ace-chat-selection-frame").forEach((frame) => frame.remove());
     document.querySelectorAll(".ace-chat-select-button").forEach((button) => button.remove());
     document.querySelectorAll(".ace-chat-selectable").forEach((element) => {
       const handler = messageClickHandlers.get(element);
@@ -427,6 +428,10 @@
         button.dataset.theme = theme;
         button.dataset.provider = provider;
       });
+      selectionRail.querySelectorAll(".ace-chat-selection-frame").forEach((frame) => {
+        frame.dataset.theme = theme;
+        frame.dataset.provider = provider;
+      });
     }
   }
 
@@ -568,6 +573,23 @@
     return window.innerWidth - 12;
   }
 
+  function selectionFrameRect(rect) {
+    const inset = 6;
+    const minLeft = Math.max(10, leftAppChromeEdge() + 8);
+    const safeRight = rightOverlayEdge(rect);
+    const left = clamp(rect.left - inset, minLeft, Math.max(minLeft, safeRight - 28));
+    const right = clamp(Math.min(rect.right + inset, safeRight), left + 28, window.innerWidth - 10);
+    const top = Math.max(58, rect.top - inset);
+    const bottom = Math.min(window.innerHeight - 92, rect.bottom + inset);
+
+    return {
+      height: Math.max(28, bottom - top),
+      left,
+      top,
+      width: Math.max(28, right - left)
+    };
+  }
+
   function roleAnchorSelector(message) {
     return message.role === "assistant" ? ASSISTANT_MESSAGE_ANCHOR_SELECTOR : USER_MESSAGE_ANCHOR_SELECTOR;
   }
@@ -689,16 +711,29 @@
 
     for (const message of state.messages) {
       const button = selectionRail.querySelector(`.ace-chat-select-button[data-message-id="${CSS.escape(message.id)}"]`);
+      const frame = selectionRail.querySelector(`.ace-chat-selection-frame[data-message-id="${CSS.escape(message.id)}"]`);
       const rect = messageAnchorRect(message);
       const visible = Boolean(button && rect && rect.bottom > topGuard && rect.top < bottomGuard);
+      const selected = state.selectedIds.has(message.id);
 
       if (!button) {
         continue;
       }
 
       button.hidden = !visible;
+      if (frame) {
+        frame.hidden = !(visible && selected);
+      }
       if (!visible) {
         continue;
+      }
+
+      if (frame && selected) {
+        const frameRect = selectionFrameRect(rect);
+        frame.style.left = `${frameRect.left}px`;
+        frame.style.top = `${frameRect.top}px`;
+        frame.style.width = `${frameRect.width}px`;
+        frame.style.height = `${frameRect.height}px`;
       }
 
       const visibleTop = Math.max(rect.top, topGuard);
@@ -791,6 +826,15 @@
       };
       selectableElement.addEventListener("click", messageClickHandler, true);
       messageClickHandlers.set(selectableElement, messageClickHandler);
+
+      const frame = document.createElement("div");
+      frame.className = "ace-chat-selection-frame";
+      frame.dataset.messageId = message.id;
+      frame.dataset.role = message.role;
+      frame.dataset.theme = detectClaudeTheme();
+      frame.dataset.provider = providerId();
+      frame.hidden = !state.selectedIds.has(message.id);
+      rail.appendChild(frame);
 
       const button = document.createElement("button");
       button.type = "button";

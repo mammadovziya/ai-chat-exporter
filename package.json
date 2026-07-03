@@ -1,6 +1,6 @@
 {
   "name": "ai-chat-exporter",
-  "version": "1.1.14",
+  "version": "1.1.15",
   "private": true,
   "type": "module",
   "description": "A privacy-first browser extension for exporting Claude, ChatGPT, Gemini, and Grok chats to PDF, Markdown, Text, JSON, CSV, and PNG.",
