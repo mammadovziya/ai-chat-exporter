@@ -14,14 +14,33 @@
     "check": "npm run build && npm test"
   },
   "keywords": [
+    "ai-chat-exporter",
     "browser-extension",
+    "chrome-extension",
+    "firefox-extension",
+    "manifest-v3",
     "claude",
+    "claude-export",
     "chatgpt",
+    "chatgpt-export",
     "gemini",
+    "gemini-export",
     "grok",
+    "grok-export",
     "export",
+    "chat-export",
+    "conversation-export",
+    "ai-chat-backup",
     "markdown",
+    "markdown-export",
     "pdf",
-    "privacy"
+    "pdf-export",
+    "json-export",
+    "csv-export",
+    "png-export",
+    "privacy",
+    "privacy-first",
+    "local-first",
+    "open-source"
   ]
 }
